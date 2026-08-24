@@ -1,0 +1,50 @@
+# ====================================
+# Maven Build Artifacts (Bỏ qua file biên dịch)
+# ====================================
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# ====================================
+# VS Code (Cấu hình riêng của VS Code)
+# ====================================
+.vscode/
+*.code-workspace
+
+# ====================================
+# NetBeans (Cấu hình riêng của NetBeans)
+# ====================================
+nbproject/private/
+**/nbproject/private/
+nbbuild/
+dist/
+nbproject/
+**/nbactions.xml
+
+# ====================================
+# IntelliJ IDEA (Cấu hình riêng của IntelliJ)
+# ====================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+**/out/
+
+# ====================================
+# Eclipse
+# ====================================
+.classpath
+.project
+.settings/
+
+# ====================================
+# OS System Files (File rác hệ điều hành)
+# ====================================
+.DS_Store
+Thumbs.db
+desktop.ini
