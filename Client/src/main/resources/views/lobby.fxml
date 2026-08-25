@@ -8,12 +8,11 @@
 <?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
 
-
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="336.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <ImageView fitHeight="389.0" fitWidth="600.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../resources/lobbyImg.png" />
+            <Image url="@../images/lobbyImg.png" />
          </image>
       </ImageView>
       <Button layoutX="230.0" layoutY="267.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="140.0" style="-fx-background-color: #FFB703;" text="Ghép ngẫu nhiên">

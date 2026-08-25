@@ -1,9 +1,9 @@
 package com.mycompany.client;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 
@@ -11,15 +11,16 @@ import javafx.stage.Stage;
  * JavaFX App
  */
 public class App extends Application {
-
     @Override
-    public void start(Stage stage) {
-        var javaVersion = SystemInfo.javaVersion();
-        var javafxVersion = SystemInfo.javafxVersion();
+    public void start(Stage stage) throws Exception {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/lobby.fxml"));
+        Pane root = loader.load();
 
-        var label = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + "."+"CLIENT RUNNING");
-        var scene = new Scene(new StackPane(label), 640, 480);
+        Scene scene = new Scene(root);
+        
+        stage.setTitle("1v1 Online Shooter");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
     }
 

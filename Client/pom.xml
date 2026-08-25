@@ -42,6 +42,9 @@
                 <version>3.14.1</version>
                 <configuration>
                     <release>24</release>
+                    <options>
+                        <option>--enable-native-access=javafx.graphics</option>
+                    </options>
                 </configuration>
             </plugin>
 
