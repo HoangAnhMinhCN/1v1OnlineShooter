@@ -5,9 +5,15 @@ import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.StackPane;
 
+/**
+ * Khởi tạo scene game: load FXML, tạo xe tăng, kết nối GameRender + InputHandler.
+ */
 public class GameScene {
+
     private Scene scene;
     private GameRender gameRender;
+    private Tank localTank;
+    private InputHandler inputHandler;
 
     public GameScene() {
         try {
@@ -19,11 +25,24 @@ public class GameScene {
 
             if (canvas != null) {
                 this.gameRender = new GameRender(canvas.getGraphicsContext2D());
+
+                // ── Khởi tạo xe tăng Player 1 ──────────────────────────────
+                // Đặt ở góc trên-trái (tile [1][1] = ô cỏ)
+                double startX = 1 * GameMap.TILE_SIZE + (GameMap.TILE_SIZE - Tank.WIDTH)  / 2.0;
+                double startY = 1 * GameMap.TILE_SIZE + (GameMap.TILE_SIZE - Tank.HEIGHT) / 2.0;
+
+                localTank = new Tank(startX, startY, "#4a7c59", "#2e5436");
+                gameRender.setLocalTank(localTank);
+
+                // ── Kết nối InputHandler ───────────────────────────────────
+                inputHandler = new InputHandler(scene, localTank);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    // ── Vòng lặp game ─────────────────────────────────────────────────────────
 
     public void startLoop() {
         if (gameRender != null) gameRender.start();
@@ -33,7 +52,13 @@ public class GameScene {
         if (gameRender != null) gameRender.stop();
     }
 
+    // ── Getters ───────────────────────────────────────────────────────────────
+
     public Scene getScene() {
         return scene;
+    }
+
+    public Tank getLocalTank() {
+        return localTank;
     }
 }
