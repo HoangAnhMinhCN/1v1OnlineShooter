@@ -25,8 +25,8 @@ public class GameRender extends AnimationTimer {
         this.gc = gc;
         try {
             grassTile = new Image(getClass().getResourceAsStream("/images/treeSmall.png"));
-            wallTile  = new Image(getClass().getResourceAsStream("/images/sandbagBrown.png"));
-            sandTile  = new Image(getClass().getResourceAsStream("/images/sand.png"));
+            wallTile = new Image(getClass().getResourceAsStream("/images/sandbagBrown.png"));
+            sandTile = new Image(getClass().getResourceAsStream("/images/sand.png"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -46,7 +46,8 @@ public class GameRender extends AnimationTimer {
     @Override
     public void handle(long now) {
         // 1. Cập nhật logic
-        if (localTank != null) localTank.update();
+        if (localTank != null)
+            localTank.update();
 
         // 2. Xóa canvas
         gc.clearRect(0, 0, GameMap.COLS * GameMap.TILE_SIZE, GameMap.ROWS * GameMap.TILE_SIZE);
@@ -55,7 +56,8 @@ public class GameRender extends AnimationTimer {
         renderTileBase();
 
         // 4. Render xe tăng (dưới lớp bụi rậm)
-        if (localTank != null) renderTank(localTank);
+        if (localTank != null)
+            renderTank(localTank);
 
         // 5. Render bụi rậm đè lên xe (lớp trên cùng)
         renderBushOverlay();
@@ -119,54 +121,53 @@ public class GameRender extends AnimationTimer {
         double cx = tank.getCenterX();
         double cy = tank.getCenterY();
 
-        // ── Áp dụng opacity ────────────────────────────────────────────────────
         gc.setGlobalAlpha(tank.getOpacity());
-
         gc.save();
 
-        // ── Xoay theo góc thân xe ─────────────────────────────────────────────
+        // Dời gốc tọa độ về tâm xe
         gc.translate(cx, cy);
-        gc.rotate(tank.getAngle());
 
-        double hw = Tank.WIDTH  / 2.0;
+        // ── 1. VẼ THÂN XE & BÁNH XÍCH (Xoay theo góc thân xe) ───────────────────
+        gc.save(); // Lưu trạng thái chưa xoay
+        gc.rotate(tank.getAngle()); // Xoay riêng cho thân xe
+
+        double hw = Tank.WIDTH / 2.0;
         double hh = Tank.HEIGHT / 2.0;
 
-        // ── Bánh xích trái ────────────────────────────────────────────────────
+        // Bánh xích
         Color trackColor = Color.web("#2d2d2d");
         gc.setFill(trackColor);
         gc.fillRoundRect(-hw - 3, -hh, 7, Tank.HEIGHT, 3, 3);
-
-        // ── Bánh xích phải ───────────────────────────────────────────────────
         gc.fillRoundRect(hw - 4, -hh, 7, Tank.HEIGHT, 3, 3);
 
-        // ── Thân xe ──────────────────────────────────────────────────────────
+        // Thân xe
         Color bodyCol = Color.web(tank.getBodyColor());
         gc.setFill(bodyCol);
         gc.fillRoundRect(-hw + 2, -hh + 3, Tank.WIDTH - 4, Tank.HEIGHT - 6, 6, 6);
 
-        // ── Chi tiết thân (sọc ngang nhạt hơn) ───────────────────────────────
+        // Sọc thân
         Color bodyLight = bodyCol.brighter().deriveColor(0, 1, 1.15, 1);
         gc.setFill(bodyLight);
         gc.fillRoundRect(-hw + 4, -hh + 6, Tank.WIDTH - 8, 6, 3, 3);
 
-        // ── Tháp pháo ────────────────────────────────────────────────────────
-        gc.rotate(tank.getTurretAngle()); // xoay thêm góc tháp pháo
+        gc.restore(); // Khôi phục lại góc 0 độ (loại bỏ tank.getAngle())
+
+        // ── 2. VẼ THÁP PHÁO & NÒNG (Xoay ĐỘC LẬP theo góc chuột) ─────────────────
+        gc.rotate(tank.getTurretAngle()); // Xoay thẳng theo góc chuột
 
         Color turretCol = Color.web(tank.getTurretColor());
         gc.setFill(turretCol);
-        gc.fillOval(-9, -9, 18, 18);
+        gc.fillOval(-9, -9, 18, 18); // Khớp tháp pháo
 
-        // ── Nòng pháo ────────────────────────────────────────────────────────
+        // Nòng pháo (vẽ chĩa lên hướng -hh)
         gc.setFill(turretCol.darker());
         gc.fillRoundRect(-2.5, -hh - 6, 5, hh + 4, 2, 2);
 
-        // ── Đầu nòng (vành sáng) ─────────────────────────────────────────────
+        // Đầu nòng
         gc.setFill(turretCol.brighter());
         gc.fillRect(-3, -hh - 8, 6, 4);
 
-        gc.restore();
-
-        // ── Reset opacity sau khi vẽ xe ──────────────────────────────────────────────
+        gc.restore(); // Khôi phục hoàn toàn Canvas
         gc.setGlobalAlpha(1.0);
     }
 }

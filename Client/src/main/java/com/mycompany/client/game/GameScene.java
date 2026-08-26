@@ -36,6 +36,8 @@ public class GameScene {
 
                 // ── Kết nối InputHandler ───────────────────────────────────
                 inputHandler = new InputHandler(scene, localTank);
+                inputHandler.registerListeners(scene);
+                inputHandler.turretControls(canvas);
             }
         } catch (Exception e) {
             e.printStackTrace();

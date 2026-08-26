@@ -10,7 +10,7 @@ public class Tank {
     // ── Hằng số ──────────────────────────────────────────────────────────────
     public static final int WIDTH  = 36; // px
     public static final int HEIGHT = 36; // px
-    public static final double SPEED = 2.5; // px/frame (~150 px/s ở 60 FPS)
+    public static final double SPEED = 1; // px/frame (~150 px/s ở 60 FPS)
     /** Độ mờ khi ở trong bụi rậm (0.0 = vô hình, 1.0 = rõ hoàn toàn) */
     public static final double BUSH_OPACITY = 0.30;
     /** Tốc độ chuyển đổi opacity mỗi frame (lerp factor) */
@@ -18,7 +18,8 @@ public class Tank {
 
     // ── Trạng thái ───────────────────────────────────────────────────────────
     private double x, y;      // vị trí góc trên-trái (pixel)
-    private double angle;     // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
+    private double angleTank;     // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
+    private double turretAngle;
     private boolean inBush;   // xe đang ở tile bụi rậm (tile type 0)
     private double opacity = 1.0; // opacity hiện tại (smooth lerp)
 
@@ -32,7 +33,8 @@ public class Tank {
     public Tank(double startX, double startY, String bodyColor, String turretColor) {
         this.x = startX;
         this.y = startY;
-        this.angle = 0; // mặt lên trên
+        this.angleTank = 0; // mặt lên trên
+        this.turretAngle = 0;
         this.bodyColor = bodyColor;
         this.turretColor = turretColor;
     }
@@ -60,7 +62,7 @@ public class Tank {
         // Xoay thân xe theo hướng đang đi
         if (dx != 0 || dy != 0) {
             // atan2(dx, -dy): 0° = lên, 90° = phải, -90° = trái, 180° = xuống
-            angle = Math.toDegrees(Math.atan2(dx, -dy));
+            angleTank = Math.toDegrees(Math.atan2(dx, -dy));
         }
 
         // Sliding collision: thử X riêng, rồi Y riêng
@@ -113,9 +115,9 @@ public class Tank {
 
     public double getX()          { return x; }
     public double getY()          { return y; }
-    public double getAngle()      { return angle; }
+    public double getAngle()      { return angleTank; }
     /** Góc tháp pháo = 0 (tháp luôn cùng hướng thân xe) */
-    public double getTurretAngle(){ return 0; }
+    public double getTurretAngle(){ return turretAngle; }
     public String getBodyColor()  { return bodyColor; }
     public String getTurretColor(){ return turretColor; }
 
@@ -133,4 +135,5 @@ public class Tank {
     public void setMoveDown (boolean v) { moveDown  = v; }
     public void setMoveLeft (boolean v) { moveLeft  = v; }
     public void setMoveRight(boolean v) { moveRight = v; }
+    public void setTurretAngle(double turretAngle) { this.turretAngle = turretAngle; }
 }
