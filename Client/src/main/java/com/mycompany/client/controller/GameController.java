@@ -1,11 +1,11 @@
 package com.mycompany.client.controller;
 
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
 
 public class GameController {
@@ -17,8 +17,8 @@ public class GameController {
 
     @FXML
     public void handleOpenChat() {
-        openChat.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent ae) {
+        openChat.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent e) {
                 chatArea.setVisible(true);
                 openChat.setVisible(false);
             }
@@ -27,8 +27,8 @@ public class GameController {
 
     @FXML
     public void handleCloseChat() {
-        closeChat.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent ae) {
+        closeChat.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            public void handle(MouseEvent e) {
                 chatArea.setVisible(false);
                 openChat.setVisible(true);
             }
