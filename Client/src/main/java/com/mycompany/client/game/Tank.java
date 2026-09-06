@@ -6,6 +6,7 @@ package com.mycompany.client.game;
  * Thân xe tự xoay mặt theo hướng đang đi.
  */
 public class Tank {
+    private final int idPlayer;
 
     // ── Hằng số ──────────────────────────────────────────────────────────────
     public static final int WIDTH  = 36; // px
@@ -30,13 +31,14 @@ public class Tank {
     // ── Trạng thái điều khiển (top-down 4 hướng) ─────────────────────────────
     private boolean moveUp, moveDown, moveLeft, moveRight;
 
-    public Tank(double startX, double startY, String bodyColor, String turretColor) {
+    public Tank(double startX, double startY, String bodyColor, String turretColor, int idPlayer) {
         this.x = startX;
         this.y = startY;
         this.angleTank = 0; // mặt lên trên
         this.turretAngle = 0;
         this.bodyColor = bodyColor;
         this.turretColor = turretColor;
+        this.idPlayer = idPlayer;
     }
 
     // ── Cập nhật trạng thái mỗi frame ────────────────────────────────────────
@@ -136,4 +138,6 @@ public class Tank {
     public void setMoveLeft (boolean v) { moveLeft  = v; }
     public void setMoveRight(boolean v) { moveRight = v; }
     public void setTurretAngle(double turretAngle) { this.turretAngle = turretAngle; }
+
+    public int getIdPlayer() { return idPlayer; }
 }

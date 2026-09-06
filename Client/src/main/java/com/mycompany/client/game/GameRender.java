@@ -1,5 +1,8 @@
 package com.mycompany.client.game;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -17,9 +20,12 @@ public class GameRender extends AnimationTimer {
     private Image grassTile;
     private Image wallTile;
     private Image sandTile;
+    private Image bulletP1, bulletP2;
+    private List<Bullet> bullets;
 
     // ── Đối tượng game ────────────────────────────────────────────────────────
     private Tank localTank; // xe tăng của người chơi hiện tại
+    private List<Tank> tanks;
 
     public GameRender(GraphicsContext gc) {
         this.gc = gc;
@@ -27,6 +33,8 @@ public class GameRender extends AnimationTimer {
             grassTile = new Image(getClass().getResourceAsStream("/images/treeSmall.png"));
             wallTile = new Image(getClass().getResourceAsStream("/images/sandbagBrown.png"));
             sandTile = new Image(getClass().getResourceAsStream("/images/sand.png"));
+            bulletP1 = new Image(getClass().getResourceAsStream("/images/bulletGreen_outline.png"));
+            bulletP2 = new Image(getClass().getResourceAsStream("/images/bulletRed_outline.png"));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -41,13 +49,25 @@ public class GameRender extends AnimationTimer {
         this.localTank = tank;
     }
 
+    public void setTanks(List<Tank> tanks) {
+        this.tanks = tanks;
+    }
+
+    public void setBullets(List<Bullet> bullets) {
+        this.bullets = bullets;
+    }
+
     // ── Game loop ─────────────────────────────────────────────────────────────
 
     @Override
     public void handle(long now) {
+        updateBullets();
+
         // 1. Cập nhật logic
         if (localTank != null)
             localTank.update();
+        // for (Tank tank : tanks)
+        // tank.update();
 
         // 2. Xóa canvas
         gc.clearRect(0, 0, GameMap.COLS * GameMap.TILE_SIZE, GameMap.ROWS * GameMap.TILE_SIZE);
@@ -56,14 +76,18 @@ public class GameRender extends AnimationTimer {
         renderTileBase();
 
         // 4. Render xe tăng (dưới lớp bụi rậm)
-        if (localTank != null)
-            renderTank(localTank);
+        // if (localTank != null)
+        // renderTank(localTank);
+        for (Tank tank : tanks)
+            renderTank(tank);
 
         // 5. Render bụi rậm đè lên xe (lớp trên cùng)
         renderBushOverlay();
 
         // 6. Render tường
         renderWalls();
+
+        renderBullets();
     }
 
     // ── Render Tile Map (3 pass) ────────────────────────────────────────────
@@ -169,5 +193,36 @@ public class GameRender extends AnimationTimer {
 
         gc.restore(); // Khôi phục hoàn toàn Canvas
         gc.setGlobalAlpha(1.0);
+    }
+
+    private void updateBullets() {
+        if (bullets == null || bullets.isEmpty()) return;
+
+        for (Bullet bullet : bullets) {
+            if (bullet.isActive()) {
+                bullet.update(); // Cập nhật tọa độ x, y
+            } else {
+                bullets.remove(bullet); // Dọn dẹp đạn biến mất
+            }
+        }
+    }
+
+    private void renderBullets() {
+        if (bullets == null || bullets.isEmpty())
+            return;
+
+        for (Bullet bullet : bullets) {
+            // Chỉ vẽ những viên đạn đang trong trạng thái bay (active)
+            if (!bullet.isActive())
+                continue;
+
+            gc.save();
+            gc.translate(bullet.getX(), bullet.getY());
+            gc.rotate(bullet.getAngle());
+
+            gc.drawImage(bulletP1, -4, -7, 8, 14);
+
+            gc.restore();
+        }
     }
 }

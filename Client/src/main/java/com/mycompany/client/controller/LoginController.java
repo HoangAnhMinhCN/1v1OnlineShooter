@@ -8,30 +8,21 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
 
-public class LobbyController {
-    @FXML private Button matchBtn;
+public class LoginController {
+    @FXML
+    private Button loginBtn;
 
     private Client client;
-    private Stage primaryStage;
+
+    public LoginController() {}
 
     public void setClient(Client client) {
         this.client = client;
     }
 
-    public void setPrimaryStage(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-    }
-
-    public LobbyController(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-    }
-
-    public LobbyController() {
-    }
-
-    @FXML 
-    public void handleMatch() {
-        SceneController.getInstance().showGameUI();
+    @FXML
+    public void handleLogin() {
+        SceneController.getInstance().showLobbyUI();
     }
 
     public void showErrorAlert(String message) {
