@@ -3,7 +3,7 @@ module com.mycompany.client {
     requires transitive javafx.graphics;
     requires javafx.fxml;
     requires javafx.base; // Add line này để sử dụng FXMLLoader
-
+    
     // Mở package chứa Controller và GameScene cho JavaFX FXML truy cập
     opens com.mycompany.client.controller to javafx.fxml;
     opens com.mycompany.client.game to javafx.fxml;

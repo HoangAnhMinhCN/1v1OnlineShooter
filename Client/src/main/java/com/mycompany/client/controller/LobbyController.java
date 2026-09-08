@@ -31,7 +31,9 @@ public class LobbyController {
 
     @FXML 
     public void handleMatch() {
-        SceneController.getInstance().showGameUI();
+        //SceneController.getInstance().showGameUI();
+        System.out.println("[LobbyController] Gửi yêu cầu match đến server.");
+        Client.sendTcpMessage("REQUEST_MATCH");
     }
 
     public void showErrorAlert(String message) {
