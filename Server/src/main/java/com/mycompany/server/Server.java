@@ -142,9 +142,7 @@ public class Server {
     }
 
     
-    public void login(){
-
-    }
+ 
     public static void main(String[] args) {
         new Server();
     }

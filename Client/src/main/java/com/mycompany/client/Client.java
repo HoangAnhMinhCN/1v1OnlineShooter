@@ -108,7 +108,7 @@ public class Client {
     }
 
     // Gửi tin nhắn TCP (Ví dụ: Đăng nhập, Chat)
-    public static void sendTcpMessage(String message) {
+    public void sendTcpMessage(String message) {
         try {
             ByteBuffer buffer = ByteBuffer.wrap((message + "\n").getBytes());
             tcpChannel.write(buffer);
