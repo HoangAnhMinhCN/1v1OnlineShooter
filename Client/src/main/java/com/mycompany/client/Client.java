@@ -16,7 +16,7 @@ public class Client {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
 
-    private SocketChannel tcpChannel;
+    private static SocketChannel tcpChannel;
     private DatagramChannel udpChannel;
     private Selector selector;
     private ConnectionCallback callback;
@@ -108,7 +108,7 @@ public class Client {
     }
 
     // Gửi tin nhắn TCP (Ví dụ: Đăng nhập, Chat)
-    public void sendTcpMessage(String message) {
+    public static void sendTcpMessage(String message) {
         try {
             ByteBuffer buffer = ByteBuffer.wrap((message + "\n").getBytes());
             tcpChannel.write(buffer);
@@ -152,4 +152,5 @@ public class Client {
         } catch (IOException ignored) {
         }
     }
+
 }

@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
@@ -13,6 +14,8 @@ public class Server {
     private Selector selector;
     private ServerSocketChannel tcpServerChannel;
     private DatagramChannel udpServerChannel;
+
+    private final Set<SocketChannel> tcpClients = new HashSet<>();
 
     public Server() {
         try {
@@ -45,7 +48,6 @@ public class Server {
         while (true) {
             // Dừng chờ cho đến khi có ít nhất 1 sự kiện I/O sẵn sàng
             selector.select();
-
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> iter = selectedKeys.iterator();
 
@@ -59,11 +61,14 @@ public class Server {
                 // --- XỬ LÝ TCP ACCEPT ---
                 if (key.isAcceptable()) {
                     ServerSocketChannel serverChannel = (ServerSocketChannel) key.channel();
+
                     SocketChannel clientChannel = serverChannel.accept();
                     clientChannel.configureBlocking(false);
                     // Đăng ký client TCP này vào Selector để chờ đọc dữ liệu
                     clientChannel.register(selector, SelectionKey.OP_READ);
                     System.out.println("[TCP] Client mới kết nối: " + clientChannel.getRemoteAddress());
+                    tcpClients.add(clientChannel);
+
                 }
 
                 // --- XỬ LÝ ĐỌC DỮ LIỆU (TCP HOẶC UDP) ---
@@ -87,6 +92,8 @@ public class Server {
                                 buffer.get(data);
                                 String msg = new String(data).trim();
                                 System.out.println("[TCP Received]: " + msg);
+                                ClientHandler.handleClientPacket(msg, clientChannel); // Gọi hàm xử lý tin nhắn từ client
+                                // Xử lý tin nhắn nhận được
                             }
                         } catch (Exception e) {
                             System.out.println(
@@ -107,9 +114,12 @@ public class Server {
                                 buffer.get(data);
                                 String msg = new String(data).trim();
                                 System.out.println("[UDP Received] Từ " + clientAddress + ": " + msg);
+                                // Xử lý tin nhắn nhận được
+                                ClientHandler.handleClientPacket(msg, datagramChannel);
+
                             } catch (Exception e) {
                                 System.out.println(
-                                        "[TCP] Client đã ngắt kết nối đột ngột: " + datagramChannel.getRemoteAddress());
+                                        "[UDP] Client đã ngắt kết nối đột ngột: " + datagramChannel.getRemoteAddress());
                                 disconnectClient(datagramChannel);
                             }
                         }
@@ -131,6 +141,10 @@ public class Server {
         }
     }
 
+    
+    public void login(){
+
+    }
     public static void main(String[] args) {
         new Server();
     }
