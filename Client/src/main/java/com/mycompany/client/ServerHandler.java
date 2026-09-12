@@ -13,8 +13,8 @@ public class ServerHandler {
                     
                     
                     break;
-                case "value1":
-                   
+                case "SHOOT":
+                   System.out.println(message);
                     break;
                 case "value2":
             

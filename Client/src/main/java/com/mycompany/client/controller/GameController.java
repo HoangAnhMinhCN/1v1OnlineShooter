@@ -60,6 +60,7 @@ public class GameController {
             // 2. Gửi gói tin thông báo bắn lên Server (nếu đánh Online)
             if (client != null) {
                 // client.sendData("SHOOT|...");
+                client.sendTcpMessage("SHOOT|x|y");
             }
         }
     }
