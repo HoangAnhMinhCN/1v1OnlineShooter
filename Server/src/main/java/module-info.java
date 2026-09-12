@@ -1,6 +1,6 @@
 module com.mycompany.server {
     requires javafx.controls;
-    requires java.sql;
+    requires transitive java.sql;
     exports com.mycompany.server;
     
 }
