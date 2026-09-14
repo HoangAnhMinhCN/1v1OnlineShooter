@@ -1,5 +1,6 @@
 package com.mycompany.client.game;
 
+import com.mycompany.client.Client;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +58,37 @@ public class GameRender extends AnimationTimer {
         this.bullets = bullets;
     }
 
+    /**
+     * Gửi vị trí hiện tại của tank lên server bằng UDP.
+     *
+     * Packet:
+     * MOVE|playerId|x|y|bodyAngle|turretAngle
+     *
+     * Ví dụ:
+     * MOVE|1|120.50|340.00|90.00|135.00
+     */
+    private void sendPositionToServer(Tank tank) {
+
+        // Chưa có Client thì không gửi dữ liệu
+        Client client = Client.getInstance();
+        if (client == null) {
+            return;
+        }
+
+        // Tạo packet chứa trạng thái di chuyển của tank
+        String packet = String.format(
+                "MOVE|%d|%.2f|%.2f|%.2f|%.2f",
+                tank.getIdPlayer(), // ID người chơi
+                tank.getX(), // Tọa độ X
+                tank.getY(), // Tọa độ Y
+                tank.getAngle(), // Góc quay thân tank
+                tank.getTurretAngle() // Góc quay tháp pháo
+        );
+
+        // Gửi packet lên server bằng UDP
+        client.sendUdpData(packet);
+    }
+
     // ── Game loop ─────────────────────────────────────────────────────────────
 
     @Override
@@ -64,8 +96,11 @@ public class GameRender extends AnimationTimer {
         updateBullets();
 
         // 1. Cập nhật logic
-        if (localTank != null)
+        if (localTank != null) {
             localTank.update();
+            sendPositionToServer(localTank);
+        }
+
         // for (Tank tank : tanks)
         // tank.update();
 
@@ -196,7 +231,8 @@ public class GameRender extends AnimationTimer {
     }
 
     private void updateBullets() {
-        if (bullets == null || bullets.isEmpty()) return;
+        if (bullets == null || bullets.isEmpty())
+            return;
 
         for (Bullet bullet : bullets) {
             if (bullet.isActive()) {
@@ -225,4 +261,5 @@ public class GameRender extends AnimationTimer {
             gc.restore();
         }
     }
+
 }
