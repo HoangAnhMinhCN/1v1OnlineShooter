@@ -91,13 +91,16 @@ public class Client {
                             int read = tcpChannel.read(buffer);
                             if (read > 0) {
                                 buffer.flip();
-                                System.out.println("[TCP Server response]: " + new String(buffer.array(), 0, read));
+                                String message = new String(buffer.array(), 0, read).trim();
+                                System.out.println("[TCP Server response]: " + message);
+                                ServerHandler.handleServerPacket(message, key.channel());
                             }
                         } else if (key.channel() instanceof DatagramChannel) {
                             udpChannel.receive(buffer);
                             buffer.flip();
-                            System.out
-                                    .println("[UDP Server response]: " + new String(buffer.array(), 0, buffer.limit()));
+                            String message = new String(buffer.array(), 0, buffer.limit()).trim();
+                            System.out.println("[UDP Server response]: " + message);
+                            ServerHandler.handleServerPacket(message, key.channel());
                         }
                     }
                 }
