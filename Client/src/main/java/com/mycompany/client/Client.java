@@ -16,6 +16,8 @@ public class Client {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
 
+    private static Client instance;
+
     private static SocketChannel tcpChannel;
     private DatagramChannel udpChannel;
     private Selector selector;
@@ -25,7 +27,14 @@ public class Client {
         this.callback = callback;
     }
 
+    // trả về đúng object Client đang kết nối tới server mà không cần phải kết nối
+    // lại
+    public static Client getInstance() {
+        return instance;
+    }
+
     public boolean connect() {
+        instance = this;
         try {
             selector = Selector.open();
 
@@ -139,7 +148,8 @@ public class Client {
 
     private void notifyFailure(String message) {
         if (callback != null) {
-            // Bắt buộc dùng Platform.runLater vì UI chỉ được cập nhật trên JavaFX Application Thread
+            // Bắt buộc dùng Platform.runLater vì UI chỉ được cập nhật trên JavaFX
+            // Application Thread
             Platform.runLater(() -> callback.onConnectFailure(message));
         }
     }

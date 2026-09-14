@@ -9,7 +9,7 @@ public class Tank {
     private final int idPlayer;
 
     // ── Hằng số ──────────────────────────────────────────────────────────────
-    public static final int WIDTH  = 36; // px
+    public static final int WIDTH = 36; // px
     public static final int HEIGHT = 36; // px
     public static final double SPEED = 1; // px/frame (~150 px/s ở 60 FPS)
     /** Độ mờ khi ở trong bụi rậm (0.0 = vô hình, 1.0 = rõ hoàn toàn) */
@@ -18,10 +18,10 @@ public class Tank {
     private static final double OPACITY_LERP = 0.08;
 
     // ── Trạng thái ───────────────────────────────────────────────────────────
-    private double x, y;      // vị trí góc trên-trái (pixel)
-    private double angleTank;     // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
+    private double x, y; // vị trí góc trên-trái (pixel)
+    private double angleTank; // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
     private double turretAngle;
-    private boolean inBush;   // xe đang ở tile bụi rậm (tile type 0)
+    private boolean inBush; // xe đang ở tile bụi rậm (tile type 0)
     private double opacity = 1.0; // opacity hiện tại (smooth lerp)
 
     // ── Màu sắc ───────────────────────────────────────────────────────────────
@@ -49,10 +49,14 @@ public class Tank {
     public void update() {
         double dx = 0, dy = 0;
 
-        if (moveUp)    dy -= SPEED;
-        if (moveDown)  dy += SPEED;
-        if (moveLeft)  dx -= SPEED;
-        if (moveRight) dx += SPEED;
+        if (moveUp)
+            dy -= SPEED;
+        if (moveDown)
+            dy += SPEED;
+        if (moveLeft)
+            dx -= SPEED;
+        if (moveRight)
+            dx += SPEED;
 
         // Di chuyển chéo: chuẩn hóa vector để tốc độ không tăng gấp đôi
         if (dx != 0 && dy != 0) {
@@ -68,8 +72,10 @@ public class Tank {
         }
 
         // Sliding collision: thử X riêng, rồi Y riêng
-        if (dx != 0 && canMoveTo(x + dx, y)) x += dx;
-        if (dy != 0 && canMoveTo(x, y + dy)) y += dy;
+        if (dx != 0 && canMoveTo(x + dx, y))
+            x += dx;
+        if (dy != 0 && canMoveTo(x, y + dy))
+            y += dy;
 
         // Kiểm tra tile tâm xe — bụi rậm = tile type 0
         updateBushState();
@@ -83,8 +89,8 @@ public class Tank {
      * Cập nhật trạng thái inBush dựa trên tile tâm xe tăng.
      */
     private void updateBushState() {
-        int col = (int)(getCenterX() / GameMap.TILE_SIZE);
-        int row = (int)(getCenterY() / GameMap.TILE_SIZE);
+        int col = (int) (getCenterX() / GameMap.TILE_SIZE);
+        int row = (int) (getCenterY() / GameMap.TILE_SIZE);
         if (row < 0 || row >= GameMap.ROWS || col < 0 || col >= GameMap.COLS) {
             inBush = false;
             return;
@@ -97,47 +103,103 @@ public class Tank {
      */
     private boolean canMoveTo(double nx, double ny) {
         int m = 3; // margin pixel
-        return isTilePassable(nx + m,           ny + m)
-            && isTilePassable(nx + WIDTH - m,   ny + m)
-            && isTilePassable(nx + m,           ny + HEIGHT - m)
-            && isTilePassable(nx + WIDTH - m,   ny + HEIGHT - m);
+        return isTilePassable(nx + m, ny + m)
+                && isTilePassable(nx + WIDTH - m, ny + m)
+                && isTilePassable(nx + m, ny + HEIGHT - m)
+                && isTilePassable(nx + WIDTH - m, ny + HEIGHT - m);
     }
 
     /**
      * Tile tại pixel (px, py) có thể đi qua không?
      */
     private boolean isTilePassable(double px, double py) {
-        int col = (int)(px / GameMap.TILE_SIZE);
-        int row = (int)(py / GameMap.TILE_SIZE);
-        if (row < 0 || row >= GameMap.ROWS || col < 0 || col >= GameMap.COLS) return false;
+        int col = (int) (px / GameMap.TILE_SIZE);
+        int row = (int) (py / GameMap.TILE_SIZE);
+        if (row < 0 || row >= GameMap.ROWS || col < 0 || col >= GameMap.COLS)
+            return false;
         return GameMap.MAP_DATA[row][col] != 1; // 1 = tường
     }
 
     // ── Getters ───────────────────────────────────────────────────────────────
 
-    public double getX()          { return x; }
-    public double getY()          { return y; }
-    public double getAngle()      { return angleTank; }
-    /** Góc tháp pháo = 0 (tháp luôn cùng hướng thân xe) */
-    public double getTurretAngle(){ return turretAngle; }
-    public String getBodyColor()  { return bodyColor; }
-    public String getTurretColor(){ return turretColor; }
+    public double getX() {
+        return x;
+    }
 
-    public double getCenterX() { return x + WIDTH  / 2.0; }
-    public double getCenterY() { return y + HEIGHT / 2.0; }
+    public double getY() {
+        return y;
+    }
+
+    public double getAngle() {
+        return angleTank;
+    }
+
+    /** Góc tháp pháo = 0 (tháp luôn cùng hướng thân xe) */
+    public double getTurretAngle() {
+        return turretAngle;
+    }
+
+    public String getBodyColor() {
+        return bodyColor;
+    }
+
+    public String getTurretColor() {
+        return turretColor;
+    }
+
+    public double getCenterX() {
+        return x + WIDTH / 2.0;
+    }
+
+    public double getCenterY() {
+        return y + HEIGHT / 2.0;
+    }
 
     /** Opacity hiện tại (đã lerp mượt mà). Dùng cho GameRender. */
-    public double getOpacity()    { return opacity; }
+    public double getOpacity() {
+        return opacity;
+    }
+
     /** Xe tăng đang trong bụi rậm không? */
-    public boolean isInBush()     { return inBush; }
+    public boolean isInBush() {
+        return inBush;
+    }
 
     // ── Setters điều khiển ────────────────────────────────────────────────────
 
-    public void setMoveUp   (boolean v) { moveUp    = v; }
-    public void setMoveDown (boolean v) { moveDown  = v; }
-    public void setMoveLeft (boolean v) { moveLeft  = v; }
-    public void setMoveRight(boolean v) { moveRight = v; }
-    public void setTurretAngle(double turretAngle) { this.turretAngle = turretAngle; }
+    public void setMoveUp(boolean v) {
+        moveUp = v;
+    }
 
-    public int getIdPlayer() { return idPlayer; }
+    public void setMoveDown(boolean v) {
+        moveDown = v;
+    }
+
+    public void setMoveLeft(boolean v) {
+        moveLeft = v;
+    }
+
+    public void setMoveRight(boolean v) {
+        moveRight = v;
+    }
+
+    // set goc phao
+    public void setTurretAngle(double turretAngle) {
+        this.turretAngle = turretAngle;
+    }
+
+    // Cap nhat vij tri tank doi thu nhan tu server
+    public void setPosition(double x, double y) {
+        this.x = x;
+        this.y = y;
+    }
+
+    // set goc than xe cho tank doi thu (goc thap phao dung setTurretAngle)
+    public void setAngle(double angle) {
+        this.angleTank = angle;
+    }
+
+    public int getIdPlayer() {
+        return idPlayer;
+    }
 }
