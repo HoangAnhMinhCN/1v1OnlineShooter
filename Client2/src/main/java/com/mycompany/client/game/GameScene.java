@@ -52,10 +52,10 @@ public class GameScene {
             for (Tank tank : tanks) tank.setOtherTanks(tanks);
             gameRender.setTanks(tanks);
 
-            // Client 1 điều khiển tank có playerId = 0.
-            localTank = tanks.get(0);
+            // Client 2 điều khiển tank có playerId = 1.
+            localTank = tanks.get(1);
             // Tank còn lại nhận vị trí từ server và được nội suy khi render.
-            tanks.get(1).setRemoteControlled(true);
+            tanks.get(0).setRemoteControlled(true);
             gameRender.setLocalTank(localTank);
 
             gameRender.setBullets(this.bullets);

@@ -69,7 +69,7 @@ public class GameRender extends AnimationTimer {
      * MOVE|playerId|x|y|bodyAngle|turretAngle
      *
      * Ví dụ:
-     * MOVE|0|120.50|340.00|90.00|135.00 (Client)
+     * MOVE|1|120.50|340.00|90.00|135.00 (Client 2)
      */
     private void sendPositionToServer(Tank tank) {
 
