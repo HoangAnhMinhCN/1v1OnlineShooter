@@ -49,9 +49,11 @@ public class ServerHandler {
 
                     Platform.runLater(() -> {
                         // Lay Tank doi thu
-                        Tank enemy = GameScene.getInstance().getEnemyTank(playerId);
+                        // Tìm đúng tank theo ID trong packet, tránh cập nhật nhầm tank khác.
+                        Tank enemy = GameScene.getInstance().getTank(playerId);
                         if (enemy != null) {
-                            enemy.setPosition(x, y); // cap nhat toa do tank sicj
+                            // Chỉ đặt vị trí mục tiêu; Tank sẽ nội suy để chuyển động mượt.
+                            enemy.setTargetPosition(x, y);
                             enemy.setTurretAngle(turretAngle); // cap nhat huong phao
                             enemy.setAngle(bodyAngle); // cap nhat huong than xe
                         }

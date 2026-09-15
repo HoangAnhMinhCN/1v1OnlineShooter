@@ -3,9 +3,20 @@ package com.mycompany.server;
 import java.sql.*;
 import java.nio.channels.*;
 import java.nio.ByteBuffer;
+import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 public class ClientHandler {
 
+    // Lưu địa chỉ UDP hiện tại của từng người chơi để server broadcast trạng thái.
+    private static final Map<Integer, SocketAddress> udpClients = new ConcurrentHashMap<>();
+
     public static void handleClientPacket(String message, Channel clientChannel) {
+        handleClientPacket(message, clientChannel, null);
+    }
+
+    // Hàm này dùng chung cho TCP và UDP; senderAddress chỉ có giá trị với UDP.
+    public static void handleClientPacket(String message, Channel clientChannel, SocketAddress senderAddress) {
         // Xử lý tin nhắn nhận được từ client
         try {
             String[] parts = message.split("\\|");
@@ -23,6 +34,13 @@ public class ClientHandler {
                     // Xử lý tin nhắn chat
                     break;
 
+                case "MOVE":
+                    // Packet MOVE chứa vị trí và góc quay của xe do client gửi lên.
+                    if (clientChannel instanceof DatagramChannel && senderAddress != null) {
+                        handleMove(parts, (DatagramChannel) clientChannel, senderAddress);
+                    }
+                    break;
+
                 default:
                     break;
             }
@@ -30,7 +48,32 @@ public class ClientHandler {
             e.printStackTrace();
         }
 
-    } 
+    }
+
+    private static void handleMove(String[] parts, DatagramChannel channel, SocketAddress sender)
+            throws Exception {
+        // Định dạng bắt buộc: MOVE|playerId|x|y|bodyAngle|turretAngle
+        if (parts.length != 6) return;
+
+        int playerId = Integer.parseInt(parts[1]);
+        double x = Double.parseDouble(parts[2]);
+        double y = Double.parseDouble(parts[3]);
+        double bodyAngle = Double.parseDouble(parts[4]);
+        double turretAngle = Double.parseDouble(parts[5]);
+
+        // Cập nhật endpoint phòng trường hợp client đổi cổng UDP hoặc kết nối lại.
+        udpClients.put(playerId, sender);
+
+        String response = String.format(
+                "MOVE|%d|%.2f|%.2f|%.2f|%.2f",
+                playerId, x, y, bodyAngle, turretAngle);
+
+        // Gửi vị trí cho tất cả người chơi khác, không gửi ngược lại người gửi.
+        for (Map.Entry<Integer, SocketAddress> client : udpClients.entrySet()) {
+            if (client.getKey() == playerId) continue;
+            channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
+        }
+    }
     private static void login(String[] parts, Channel clientChannel) {
         // Xử lý đăng nhập
         String username1 = parts[1];

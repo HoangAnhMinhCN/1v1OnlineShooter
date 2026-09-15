@@ -27,6 +27,10 @@ public class GameRender extends AnimationTimer {
     // ── Đối tượng game ────────────────────────────────────────────────────────
     private Tank localTank; // xe tăng của người chơi hiện tại
     private List<Tank> tanks;
+    // Thời điểm gửi packet MOVE gần nhất, tính bằng nano giây.
+    private long lastPositionSendNanos;
+    // Gửi 20 packet/giây (mỗi packet cách nhau 50 ms).
+    private static final long POSITION_SEND_INTERVAL_NANOS = 50_000_000L;
 
     public GameRender(GraphicsContext gc) {
         this.gc = gc;
@@ -98,7 +102,11 @@ public class GameRender extends AnimationTimer {
         // 1. Cập nhật logic
         if (localTank != null) {
             localTank.update();
-            sendPositionToServer(localTank);
+            // Không gửi theo từng frame; giới hạn tần suất để giảm băng thông UDP.
+            if (now - lastPositionSendNanos >= POSITION_SEND_INTERVAL_NANOS) {
+                sendPositionToServer(localTank);
+                lastPositionSendNanos = now;
+            }
         }
 
         // for (Tank tank : tanks)

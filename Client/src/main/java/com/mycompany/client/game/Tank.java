@@ -19,6 +19,8 @@ public class Tank {
 
     // ── Trạng thái ───────────────────────────────────────────────────────────
     private double x, y; // vị trí góc trên-trái (pixel)
+    // Vị trí server mới gửi về, dùng làm đích nội suy cho tank đối thủ.
+    private double targetX, targetY;
     private double angleTank; // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
     private double turretAngle;
     private boolean inBush; // xe đang ở tile bụi rậm (tile type 0)
@@ -34,6 +36,8 @@ public class Tank {
     public Tank(double startX, double startY, String bodyColor, String turretColor, int idPlayer) {
         this.x = startX;
         this.y = startY;
+        this.targetX = startX;
+        this.targetY = startY;
         this.angleTank = 0; // mặt lên trên
         this.turretAngle = 0;
         this.bodyColor = bodyColor;
@@ -47,6 +51,11 @@ public class Tank {
      * Cập nhật vị trí và hướng xe tăng, kiểm tra collision với tile map.
      */
     public void update() {
+        // Tank đối thủ được kéo mượt về vị trí mới nhận từ server.
+        if (!hasMovementInput()) {
+            x += (targetX - x) * 0.20;
+            y += (targetY - y) * 0.20;
+        }
         double dx = 0, dy = 0;
 
         if (moveUp)
@@ -83,6 +92,10 @@ public class Tank {
         // Smooth lerp opacity về mục tiêu
         double targetOpacity = inBush ? BUSH_OPACITY : 1.0;
         opacity += (targetOpacity - opacity) * OPACITY_LERP;
+    }
+
+    private boolean hasMovementInput() {
+        return moveUp || moveDown || moveLeft || moveRight;
     }
 
     /**
@@ -192,6 +205,14 @@ public class Tank {
     public void setPosition(double x, double y) {
         this.x = x;
         this.y = y;
+        this.targetX = x;
+        this.targetY = y;
+    }
+
+    public void setTargetPosition(double x, double y) {
+        // Không dịch chuyển ngay lập tức để tránh hiện tượng giật hình.
+        this.targetX = x;
+        this.targetY = y;
     }
 
     // set goc than xe cho tank doi thu (goc thap phao dung setTurretAngle)

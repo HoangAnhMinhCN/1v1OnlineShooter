@@ -133,4 +133,13 @@ public class GameScene {
                 .findFirst() // lấy phần tử đầu tiên tìm được
                 .orElse(null); // trả null nếu không tìm thấy
     }
+
+    public Tank getTank(int playerId) {
+        // Tìm tank tương ứng với playerId server gửi về.
+        if (tanks == null) return null;
+        return tanks.stream()
+                .filter(t -> t.getIdPlayer() == playerId)
+                .findFirst()
+                .orElse(null);
+    }
 }
