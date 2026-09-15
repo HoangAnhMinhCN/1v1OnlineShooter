@@ -51,8 +51,8 @@ public class GameScene {
             tanks = createTanks(0, 1);
             gameRender.setTanks(tanks);
 
-            // Client 1 điều khiển tank có playerId = 0.
-            localTank = tanks.get(0);
+            // Client 2 điều khiển tank có playerId = 1.
+            localTank = tanks.get(1);
             gameRender.setLocalTank(localTank);
 
             gameRender.setBullets(this.bullets);
