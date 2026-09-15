@@ -33,7 +33,19 @@ public class ServerHandler {
                     break;
 
                 case "SHOOT":
-                    System.out.println(message);
+                    // Kiểm tra gói có đủ 5 trường: SHOOT, ID, X, Y và góc bắn.
+                    if (parts.length == 5) {
+                        // Đọc ID của người chơi đã bắn.
+                        int playerId = Integer.parseInt(parts[1]);
+                        // Đọc tọa độ X của viên đạn.
+                        double x = Double.parseDouble(parts[2]);
+                        // Đọc tọa độ Y của viên đạn.
+                        double y = Double.parseDouble(parts[3]);
+                        // Đọc góc bắn của viên đạn.
+                        double angle = Double.parseDouble(parts[4]);
+                        // Đưa việc tạo đạn lên JavaFX Application Thread.
+                        Platform.runLater(() -> GameScene.getInstance().spawnBullet(x, y, angle, playerId));
+                    }
                     break;
 
                 // tank di chuyen
