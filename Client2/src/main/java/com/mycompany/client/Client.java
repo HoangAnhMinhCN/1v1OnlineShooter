@@ -15,7 +15,6 @@ import javafx.application.Platform;
 public class Client {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
-    public static String playerId=null;
 
     private static Client instance;
 
