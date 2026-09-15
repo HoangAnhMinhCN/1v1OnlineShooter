@@ -49,6 +49,7 @@ public class GameScene {
             // Tạo danh sách tank và lưu vào field (không dùng biến local)
             // Hai ID cố định dùng cho lần test local: Client = 0, Client 2 = 1.
             tanks = createTanks(0, 1);
+            for (Tank tank : tanks) tank.setOtherTanks(tanks);
             gameRender.setTanks(tanks);
 
             // Client 2 điều khiển tank có playerId = 1.

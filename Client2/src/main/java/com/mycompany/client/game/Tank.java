@@ -1,5 +1,7 @@
 package com.mycompany.client.game;
 
+import java.util.List;
+
 /**
  * Đại diện cho xe tăng của người chơi trong game.
  * Di chuyển top-down 4 hướng: W=lên, S=xuống, A=trái, D=phải.
@@ -23,6 +25,7 @@ public class Tank {
     private double targetX, targetY;
     // Chỉ tank đối thủ mới dùng nội suy từ vị trí server gửi về.
     private boolean remoteControlled;
+    private List<Tank> otherTanks;
     private double angleTank; // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
     private double turretAngle;
     private boolean inBush; // xe đang ở tile bụi rậm (tile type 0)
@@ -55,8 +58,10 @@ public class Tank {
     public void update() {
         // Tank đối thủ được kéo mượt về vị trí mới nhận từ server.
         if (remoteControlled) {
-            x += (targetX - x) * 0.20;
-            y += (targetY - y) * 0.20;
+            double nextX = x + (targetX - x) * 0.20;
+            double nextY = y + (targetY - y) * 0.20;
+            if (canMoveTo(nextX, y)) x = nextX;
+            if (canMoveTo(x, nextY)) y = nextY;
         }
         double dx = 0, dy = 0;
 
@@ -118,10 +123,23 @@ public class Tank {
      */
     private boolean canMoveTo(double nx, double ny) {
         int m = 3; // margin pixel
-        return isTilePassable(nx + m, ny + m)
+        if (!(isTilePassable(nx + m, ny + m)
                 && isTilePassable(nx + WIDTH - m, ny + m)
                 && isTilePassable(nx + m, ny + HEIGHT - m)
-                && isTilePassable(nx + WIDTH - m, ny + HEIGHT - m);
+                && isTilePassable(nx + WIDTH - m, ny + HEIGHT - m))) return false;
+
+        if (otherTanks != null) {
+            for (Tank other : otherTanks) {
+                if (other != null && other != this && rectanglesOverlap(nx, ny, other.x, other.y)) return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean rectanglesOverlap(double ax, double ay, double bx, double by) {
+        double gap = 2.0;
+        return ax < bx + WIDTH + gap && ax + WIDTH + gap > bx
+                && ay < by + HEIGHT + gap && ay + HEIGHT + gap > by;
     }
 
     /**
@@ -219,6 +237,10 @@ public class Tank {
 
     public void setRemoteControlled(boolean remoteControlled) {
         this.remoteControlled = remoteControlled;
+    }
+
+    public void setOtherTanks(List<Tank> otherTanks) {
+        this.otherTanks = otherTanks;
     }
 
     // set goc than xe cho tank doi thu (goc thap phao dung setTurretAngle)
