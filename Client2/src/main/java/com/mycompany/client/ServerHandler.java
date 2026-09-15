@@ -4,6 +4,11 @@ import com.mycompany.client.game.Tank;
 import com.mycompany.client.game.GameScene;
 import java.nio.channels.Channel;
 
+import com.mycompany.client.controller.SceneController;
+
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+
 public class ServerHandler {
     public static void handleServerPacket(String message, Channel clientChannel) {
 
@@ -26,6 +31,7 @@ public class ServerHandler {
                         alert.showAndWait();
                     });
                     break;
+
                 case "SHOOT":
                     // Kiểm tra gói có đủ 5 trường: SHOOT, ID, X, Y và góc bắn.
                     if (parts.length == 5) {

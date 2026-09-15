@@ -117,12 +117,14 @@ public class Server {
                                 String msg = new String(data).trim();
                                 System.out.println("[UDP Received] Từ " + clientAddress + ": " + msg);
                                 // Xử lý tin nhắn nhận được
-                                ClientHandler.handleClientPacket(msg, datagramChannel);
+                                // Truyền địa chỉ người gửi để server có thể gửi trạng thái về đúng client.
+                                ClientHandler.handleClientPacket(msg, datagramChannel, clientAddress);
 
                             } catch (Exception e) {
                                 System.out.println(
                                         "[UDP] Client đã ngắt kết nối đột ngột: " + datagramChannel.getRemoteAddress());
-                                disconnectClient(datagramChannel);
+                                // UDP không có kết nối cố định; bỏ qua gói lỗi thay vì đóng channel dùng chung.
+                                e.printStackTrace();
                             }
                         }
                     }
