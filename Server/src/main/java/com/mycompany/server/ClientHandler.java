@@ -45,7 +45,8 @@ public class ClientHandler {
             if (resultSet.next()) {
                 // Đăng nhập thành công
                 System.out.println("login successed: " + username1);
-                sendTcpResponse("LOGIN_SUCCESS", clientChannel);
+                sendTcpResponse("LOGIN_SUCCESS|" + resultSet.getString("id"), clientChannel);
+                Server.loggedClients.add(resultSet.getString("id"));    
             } else {
                 // Đăng nhập thất bại
                 System.out.println("Login failed" + username1);
@@ -67,4 +68,5 @@ public class ClientHandler {
             }
         }
     }
+
 }

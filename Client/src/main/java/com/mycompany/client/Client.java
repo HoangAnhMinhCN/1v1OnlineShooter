@@ -15,6 +15,7 @@ import javafx.application.Platform;
 public class Client {
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
+    public static String playerId=null;
 
     private static SocketChannel tcpChannel;
     private DatagramChannel udpChannel;
@@ -92,6 +93,7 @@ public class Client {
                             if (read > 0) {
                                 buffer.flip();
                                 System.out.println("[TCP Server response]: " + new String(buffer.array(), 0, read));
+                                ServerHandler.handleServerPacket(new String(buffer.array(), 0, read), tcpChannel);
                             }
                         } else if (key.channel() instanceof DatagramChannel) {
                             udpChannel.receive(buffer);

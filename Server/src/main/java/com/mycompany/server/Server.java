@@ -8,6 +8,7 @@ import java.nio.channels.*;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.ArrayList;
 
 public class Server {
     private static final int PORT = 12345;
@@ -15,7 +16,8 @@ public class Server {
     private ServerSocketChannel tcpServerChannel;
     private DatagramChannel udpServerChannel;
 
-    private final Set<SocketChannel> tcpClients = new HashSet<>();
+    private Set<SocketChannel> tcpClients = new HashSet<>();
+    public static ArrayList<String> loggedClients = new ArrayList<>();
 
     public Server() {
         try {
