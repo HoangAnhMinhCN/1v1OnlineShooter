@@ -7,7 +7,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
     private static final int PORT = 12345;
@@ -16,6 +18,7 @@ public class Server {
     private DatagramChannel udpServerChannel;
 
     private final Set<SocketChannel> tcpClients = new HashSet<>();
+    private final Map<Integer, ClientSession> sessions = new ConcurrentHashMap<>();
 
     public Server() {
         try {

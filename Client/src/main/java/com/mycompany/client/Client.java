@@ -22,6 +22,7 @@ public class Client {
     private DatagramChannel udpChannel;
     private Selector selector;
     private ConnectionCallback callback;
+    private String idPlayer;
 
     public void setConnectionCallback(ConnectionCallback callback) {
         this.callback = callback;
@@ -31,6 +32,10 @@ public class Client {
     // lại
     public static Client getInstance() {
         return instance;
+    }
+
+    public void setIdPlayer(String idPlayer) {
+        this.idPlayer = idPlayer;
     }
 
     public boolean connect() {
