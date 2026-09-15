@@ -21,6 +21,8 @@ public class Tank {
     private double x, y; // vị trí góc trên-trái (pixel)
     // Vị trí server mới gửi về, dùng làm đích nội suy cho tank đối thủ.
     private double targetX, targetY;
+    // Chỉ tank đối thủ mới dùng nội suy từ vị trí server gửi về.
+    private boolean remoteControlled;
     private double angleTank; // góc quay thân xe (độ, 0 = lên trên, 90 = sang phải)
     private double turretAngle;
     private boolean inBush; // xe đang ở tile bụi rậm (tile type 0)
@@ -52,7 +54,7 @@ public class Tank {
      */
     public void update() {
         // Tank đối thủ được kéo mượt về vị trí mới nhận từ server.
-        if (!hasMovementInput()) {
+        if (remoteControlled) {
             x += (targetX - x) * 0.20;
             y += (targetY - y) * 0.20;
         }
@@ -213,6 +215,10 @@ public class Tank {
         // Không dịch chuyển ngay lập tức để tránh hiện tượng giật hình.
         this.targetX = x;
         this.targetY = y;
+    }
+
+    public void setRemoteControlled(boolean remoteControlled) {
+        this.remoteControlled = remoteControlled;
     }
 
     // set goc than xe cho tank doi thu (goc thap phao dung setTurretAngle)

@@ -109,6 +109,13 @@ public class GameRender extends AnimationTimer {
             }
         }
 
+        // Cập nhật nội suy cho tank đối thủ trên JavaFX game loop.
+        if (tanks != null) {
+            for (Tank tank : tanks) {
+                if (tank != localTank) tank.update();
+            }
+        }
+
         // for (Tank tank : tanks)
         // tank.update();
 
