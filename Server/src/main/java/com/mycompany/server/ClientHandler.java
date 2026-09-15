@@ -40,6 +40,13 @@ public class ClientHandler {
                         handleMove(parts, (DatagramChannel) clientChannel, senderAddress);
                     }
                     break;
+                case "SHOOT":
+                    // Chỉ xử lý SHOOT nếu gói tin đến từ kênh UDP và có địa chỉ người gửi.
+                    if (clientChannel instanceof DatagramChannel && senderAddress != null) {
+                        // Chuyển gói tin đến hàm xử lý bắn đạn.
+                        handleShoot(parts, (DatagramChannel) clientChannel, senderAddress);
+                    }
+                    break;
 
                 default:
                     break;
@@ -48,6 +55,31 @@ public class ClientHandler {
             e.printStackTrace();
         }
 
+    }
+
+    private static void handleShoot(String[] parts, DatagramChannel channel, SocketAddress sender)
+            throws Exception {
+        // Gói có dạng: SHOOT|playerId|x|y|turretAngle.
+        if (parts.length != 5) return;
+        // Đọc ID của người chơi gửi gói tin.
+        int playerId = Integer.parseInt(parts[1]);
+        // Đọc tọa độ X của viên đạn.
+        double x = Double.parseDouble(parts[2]);
+        // Đọc tọa độ Y của viên đạn.
+        double y = Double.parseDouble(parts[3]);
+        // Đọc góc bắn của viên đạn.
+        double angle = Double.parseDouble(parts[4]);
+        // Đăng ký endpoint UDP đầu tiên của player nếu chưa có.
+        udpClients.putIfAbsent(playerId, sender);
+        // Bỏ qua gói nếu playerId đang bị một endpoint khác sở hữu.
+        if (!sender.equals(udpClients.get(playerId))) return;
+        // Tạo lại gói phản hồi để gửi cho các client còn lại.
+        String response = String.format("SHOOT|%d|%.2f|%.2f|%.2f", playerId, x, y, angle);
+        // Duyệt qua danh sách các người chơi đã đăng ký UDP.
+        for (Map.Entry<Integer, SocketAddress> client : udpClients.entrySet()) {
+            // Không gửi lại cho chính người vừa bắn.
+            if (client.getKey() != playerId) channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
+        }
     }
 
     private static void handleMove(String[] parts, DatagramChannel channel, SocketAddress sender)

@@ -105,6 +105,11 @@ public class GameScene {
         bullets.add(newBullet);
     }
 
+    public void spawnBullet(double x, double y, double angle, int playerId) {
+        // Tạo viên đạn từ dữ liệu nhận được qua UDP.
+        bullets.add(new Bullet(x, y, angle, playerId));
+    }
+
     // ── Vòng lặp game ─────────────────────────────────────────────────────────
 
     public void startLoop() {

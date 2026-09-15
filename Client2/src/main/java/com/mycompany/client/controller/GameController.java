@@ -60,7 +60,20 @@ public class GameController {
             // 2. Gửi gói tin thông báo bắn lên Server (nếu đánh Online)
             if (client != null) {
                 // client.sendData("SHOOT|...");
-                client.sendTcpMessage("SHOOT|x|y");
+                // Lấy tank đang được người chơi điều khiển.
+                com.mycompany.client.game.Tank tank = gameScene.getLocalTank();
+                // Tạo gói UDP gồm loại gói, ID người chơi, tọa độ tâm đạn và góc nòng pháo.
+                String shootPacket = String.format("SHOOT|%d|%.2f|%.2f|%.2f",
+                        // Ghi ID của người bắn vào gói tin.
+                        tank.getIdPlayer(),
+                        // Ghi tọa độ X nơi viên đạn xuất hiện.
+                        tank.getCenterX(),
+                        // Ghi tọa độ Y nơi viên đạn xuất hiện.
+                        tank.getCenterY(),
+                        // Ghi góc bắn của nòng pháo.
+                        tank.getTurretAngle());
+                // Gửi gói bắn đạn đến server bằng UDP.
+                client.sendUdpData(shootPacket);
             }
         }
     }
