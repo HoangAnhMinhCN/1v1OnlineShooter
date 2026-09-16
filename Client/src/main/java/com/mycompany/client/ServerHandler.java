@@ -19,8 +19,11 @@ public class ServerHandler {
                 case "LOGIN_SUCCESS":
                     // Đăng nhập thành công → chuyển sang màn hình Lobby
                     Platform.runLater(() -> SceneController.getInstance().showLobbyUI());
+                    Client.setPlayerId(parts[1]); // Lưu ID người chơi vào Client
+                    Client.sendUdpData("UDP_ADDRESS|" + Client.getInstance().getPlayerId()); // Gửi địa chỉ UDP của client lên server
                     break;
-
+                case "":
+                    break;
                 case "LOGIN_FAILED":
                     // Đăng nhập thất bại → hiển thị thông báo lỗi
                     Platform.runLater(() -> {
@@ -31,6 +34,7 @@ public class ServerHandler {
                         alert.showAndWait();
                     });
                     break;
+
                 case "SHOOT":
                     // Kiểm tra gói có đủ 5 trường: SHOOT, ID, X, Y và góc bắn.
                     if (parts.length == 5) {

@@ -33,7 +33,7 @@ public class LobbyController {
     public void handleMatch() {
         //SceneController.getInstance().showGameUI();
         System.out.println("[LobbyController] Gửi yêu cầu match đến server.");
-        client.sendTcpMessage("REQUEST_MATCH");
+        Client.sendTcpMessage("MATCH_REQUEST|" + Client.getInstance().getPlayerId());
     }
 
     public void showErrorAlert(String message) {

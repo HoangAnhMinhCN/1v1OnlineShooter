@@ -5,10 +5,9 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.*;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+
 
 public class Server {
     private static final int PORT = 12345;
@@ -17,7 +16,10 @@ public class Server {
     private DatagramChannel udpServerChannel;
 
     private Set<SocketChannel> tcpClients = new HashSet<>();
-    public static ArrayList<String> loggedClients = new ArrayList<>();
+    public static ConcurrentHashMap<String, Player> players = new ConcurrentHashMap<>();
+    public static ArrayDeque<String> matchMakingQueue = new ArrayDeque<>();
+    public static HashSet<GameRoom> gameRooms = new HashSet<>();
+
 
     public Server() {
         try {
