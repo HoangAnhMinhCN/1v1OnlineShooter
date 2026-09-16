@@ -4,7 +4,6 @@ import com.mycompany.client.Client;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 
@@ -29,7 +28,7 @@ public class LoginController {
         // SceneController.getInstance().showLobbyUI();
         client.sendTcpMessage("LOGIN|"+username.getText()+"|"+password.getText());
     }
-
+  
     public void showErrorAlert(String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.ERROR);

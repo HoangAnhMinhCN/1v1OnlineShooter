@@ -17,9 +17,9 @@ public class Client {
     private static final int SERVER_PORT = 12345;
 
     private static Client instance;
-
+    private static String playerId;
     private static SocketChannel tcpChannel;
-    private DatagramChannel udpChannel;
+    private static DatagramChannel udpChannel;
     private Selector selector;
     private ConnectionCallback callback;
     private String idPlayer;
@@ -33,11 +33,12 @@ public class Client {
     public static Client getInstance() {
         return instance;
     }
-
-    public void setIdPlayer(String idPlayer) {
-        this.idPlayer = idPlayer;
+    public String getPlayerId() {
+        return playerId;
     }
-
+    public static void setPlayerId(String playerId) {
+        Client.playerId = playerId;
+    }
     public boolean connect() {
         instance = this;
         try {
@@ -125,7 +126,7 @@ public class Client {
     }
 
     // Gửi tin nhắn TCP (Ví dụ: Đăng nhập, Chat)
-    public void sendTcpMessage(String message) {
+    public static void sendTcpMessage(String message) {
         try {
             ByteBuffer buffer = ByteBuffer.wrap((message + "\n").getBytes());
             tcpChannel.write(buffer);
@@ -135,7 +136,7 @@ public class Client {
     }
 
     // Gửi gói tin UDP (Ví dụ: Tọa độ di chuyển)
-    public void sendUdpData(String data) {
+    public static void sendUdpData(String data) {
         try {
             ByteBuffer buffer = ByteBuffer.wrap(data.getBytes());
             SocketAddress target = new InetSocketAddress(SERVER_HOST, SERVER_PORT);
