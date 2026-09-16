@@ -4,6 +4,11 @@ import com.mycompany.client.game.Tank;
 import com.mycompany.client.game.GameScene;
 import java.nio.channels.Channel;
 
+import com.mycompany.client.controller.SceneController;
+
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+
 public class ServerHandler {
     public static void handleServerPacket(String message, Channel clientChannel) {
 
