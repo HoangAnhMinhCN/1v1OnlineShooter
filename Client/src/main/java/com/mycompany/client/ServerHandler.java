@@ -21,7 +21,8 @@ public class ServerHandler {
                     // Đăng nhập thành công → chuyển sang màn hình Lobby
                     Platform.runLater(() -> SceneController.getInstance().showLobbyUI());
                     Client.setPlayerId(parts[1]); // Lưu ID người chơi vào Client
-                    Client.sendUdpData("UDP_ADDRESS|" + Client.getInstance().getPlayerId()); // Gửi địa chỉ UDP của client lên server
+                    Client.sendUdpData("UDP_ADDRESS|" + Client.getInstance().getPlayerId()); // Gửi địa chỉ UDP của
+                                                                                             // client lên server
                     break;
                 case "":
                     break;
@@ -39,14 +40,11 @@ public class ServerHandler {
                 case "SHOOT":
                     // Kiểm tra gói có đủ 5 trường: SHOOT, ID, X, Y và góc bắn.
                     if (parts.length == 5) {
-                        // Đọc ID của người chơi đã bắn.
                         String playerId = parts[1];
-                        // Đọc tọa độ X của viên đạn.
                         double x = Double.parseDouble(parts[2]);
-                        // Đọc tọa độ Y của viên đạn.
                         double y = Double.parseDouble(parts[3]);
-                        // Đọc góc bắn của viên đạn.
                         double angle = Double.parseDouble(parts[4]);
+
                         // Đưa việc tạo đạn lên JavaFX Application Thread.
                         Platform.runLater(() -> GameScene.getInstance().spawnBullet(x, y, angle, playerId));
                     }
@@ -61,8 +59,6 @@ public class ServerHandler {
                     double bodyAngle = Double.parseDouble(parts[4]); // goc than xe
                     double turretAngle = Double.parseDouble(parts[5]); // goc nòng pháo
 
-                    // chay tren javafx thread de cap nhat ui cho object
-
                     Platform.runLater(() -> {
                         // Lay Tank doi thu
                         // Tìm đúng tank theo ID trong packet, tránh cập nhật nhầm tank khác.
@@ -76,9 +72,11 @@ public class ServerHandler {
 
                     });
                     break;
-                
+
                 case "MATCH_FOUND":
-                    Client.getInstance().setGameRoomId(parts[1]);
+                    Client.getInstance().setGameRoomId(parts[2]);
+                    Client.getInstance().setAnotherPlayerId(parts[1]);
+                    Client.getInstance().setMyNumber(Integer.parseInt(parts[3]));
                     Platform.runLater(() -> SceneController.getInstance().showGameUI());
                     break;
 

@@ -271,7 +271,10 @@ public class GameRender extends AnimationTimer {
             gc.translate(bullet.getX(), bullet.getY());
             gc.rotate(bullet.getAngle());
 
-            gc.drawImage(bulletP1, -4, -7, 8, 14);
+            if (Client.getInstance().getMyNumber() == 1) 
+                gc.drawImage(bulletP1, -4, -7, 8, 14);
+            else
+                gc.drawImage(bulletP2, -4, -7, 8, 14);
 
             gc.restore();
         }

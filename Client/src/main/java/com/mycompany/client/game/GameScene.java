@@ -48,18 +48,22 @@ public class GameScene {
             this.gameRender = new GameRender(canvas.getGraphicsContext2D());
 
             // Tạo danh sách tank và lưu vào field (không dùng biến local)
-            // Hai ID cố định dùng cho lần test local: Client = 0, Client 2 = 1.
-            tanks = createTanks(Client.getInstance().getPlayerId(), Client.getInstance().getAnotherPlayerId());
+            if (Client.getInstance().getMyNumber() == 1)
+                tanks = createTanks(Client.getInstance().getPlayerId(), Client.getInstance().getAnotherPlayerId());
+            else
+                tanks = createTanks(Client.getInstance().getAnotherPlayerId(), Client.getInstance().getPlayerId());
+
             for (Tank tank : tanks)
                 tank.setOtherTanks(tanks);
             gameRender.setTanks(tanks);
 
-            if (Integer.parseInt(Client.getInstance().getGameRoomId()) % 2 == 0) {
+            if (Client.getInstance().getMyNumber() == 1) {
                 localTank = tanks.get(0);
                 // Tank còn lại nhận vị trí từ server và được nội suy khi render.
                 tanks.get(1).setRemoteControlled(true);
             } else {
                 localTank = tanks.get(1);
+                // Tank còn lại nhận vị trí từ server và được nội suy khi render.
                 tanks.get(0).setRemoteControlled(true);
             }
 

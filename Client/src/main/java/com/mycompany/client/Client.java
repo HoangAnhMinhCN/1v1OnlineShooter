@@ -24,7 +24,7 @@ public class Client {
     private static DatagramChannel udpChannel;
     private Selector selector;
     private ConnectionCallback callback;
-    private String idPlayer;
+    private int myNumber;
 
     public void setConnectionCallback(ConnectionCallback callback) {
         this.callback = callback;
@@ -58,6 +58,14 @@ public class Client {
 
     public String getAnotherPlayerId() {
         return anotherPlayerId;
+    }
+
+    public void setMyNumber(int number) {
+        myNumber = number;
+    }
+
+    public int getMyNumber() {
+        return myNumber;
     }
 
     public boolean connect() {
