@@ -17,7 +17,7 @@ public class ServerHandler {
             String type = parts[0];
             switch (type) {
                 case "LOGIN_SUCCESS":
-                    Client.getInstance().setIdPlayer(parts[1]);
+                    Client.getInstance().setPlayerId(parts[1]);
                     // Đăng nhập thành công → chuyển sang màn hình Lobby
                     Platform.runLater(() -> SceneController.getInstance().showLobbyUI());
                     Client.setPlayerId(parts[1]); // Lưu ID người chơi vào Client
