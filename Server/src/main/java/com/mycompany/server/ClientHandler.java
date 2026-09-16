@@ -104,7 +104,7 @@ public class ClientHandler {
         double y = Double.parseDouble(parts[4]);
         double angle = Double.parseDouble(parts[5]);
 
-        String anotherPlayerId = "";
+        String anotherPlayerId = null;
         for (GameRoom gameRoom : Server.getGameRooms()) {
             if (gameRoomId.equals(gameRoom.getRoomId())) {
                 if (playerId.equals(gameRoom.getPlayer1Id()))
@@ -163,7 +163,7 @@ public class ClientHandler {
         double bodyAngle = Double.parseDouble(parts[5]);
         double turretAngle = Double.parseDouble(parts[6]);
 
-        String anotherPlayerId = "";
+        String anotherPlayerId = null;
         for (GameRoom gameRoom : Server.getGameRooms()) {
             if (gameRoomId.equals(gameRoom.getRoomId())) {
                 if (playerId.equals(gameRoom.getPlayer1Id()))

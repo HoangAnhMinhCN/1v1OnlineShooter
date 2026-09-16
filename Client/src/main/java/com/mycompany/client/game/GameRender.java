@@ -112,7 +112,8 @@ public class GameRender extends AnimationTimer {
         // Cập nhật nội suy cho tank đối thủ trên JavaFX game loop.
         if (tanks != null) {
             for (Tank tank : tanks) {
-                if (tank != localTank) tank.update();
+                if (tank != localTank)
+                    tank.update();
             }
         }
 
@@ -271,10 +272,19 @@ public class GameRender extends AnimationTimer {
             gc.translate(bullet.getX(), bullet.getY());
             gc.rotate(bullet.getAngle());
 
-            if (Client.getInstance().getMyNumber() == 1) 
-                gc.drawImage(bulletP1, -4, -7, 8, 14);
-            else
-                gc.drawImage(bulletP2, -4, -7, 8, 14);
+            if (Client.getInstance().getMyNumber() == 1) {
+                if (Client.getInstance().getPlayerId().equals(bullet.getIdPlayer()))
+                    gc.drawImage(bulletP1, -4, -7, 8, 14);
+                else
+                    gc.drawImage(bulletP2, -4, -7, 8, 14);
+            }
+
+            else {
+                if (Client.getInstance().getPlayerId().equals(bullet.getIdPlayer()))
+                    gc.drawImage(bulletP2, -4, -7, 8, 14);
+                else
+                    gc.drawImage(bulletP1, -4, -7, 8, 14);
+            }
 
             gc.restore();
         }

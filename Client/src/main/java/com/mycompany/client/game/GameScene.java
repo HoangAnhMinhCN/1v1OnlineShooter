@@ -47,7 +47,6 @@ public class GameScene {
         if (canvas != null) {
             this.gameRender = new GameRender(canvas.getGraphicsContext2D());
 
-            // Tạo danh sách tank và lưu vào field (không dùng biến local)
             if (Client.getInstance().getMyNumber() == 1)
                 tanks = createTanks(Client.getInstance().getPlayerId(), Client.getInstance().getAnotherPlayerId());
             else
@@ -147,19 +146,19 @@ public class GameScene {
      * Lấy tank đối thủ (tank có idPlayer KHÁC với myPlayerId).
      * ServerHandler gọi để cập nhật vị trí tank địch khi nhận gói MOVE từ server.
      */
-    public Tank getEnemyTank(String myPlayerId) {
-        return tanks.stream()
-                .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của mình
-                .findFirst() // lấy phần tử đầu tiên tìm được
-                .orElse(null); // trả null nếu không tìm thấy
-    }
+    // public Tank getEnemyTank(String myPlayerId) {
+    //     return tanks.stream()
+    //             .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của mình
+    //             .findFirst() // lấy phần tử đầu tiên tìm được
+    //             .orElse(null); // trả null nếu không tìm thấy
+    // }
 
     public Tank getTank(String playerId) {
         // Tìm tank tương ứng với playerId server gửi về.
         if (tanks == null)
             return null;
         return tanks.stream()
-                .filter(t -> t.getIdPlayer() == playerId)
+                .filter(t -> t.getIdPlayer().equals(playerId))
                 .findFirst()
                 .orElse(null);
     }
