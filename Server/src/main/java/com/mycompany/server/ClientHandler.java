@@ -25,6 +25,39 @@ public class ClientHandler {
                 case "LOGIN":
                     // Xử lý đăng nhập
                     login(parts, clientChannel);
+                    break;
+                case "UDP_ADDRESS":
+                    Server.players.get(parts[1]).setUdpAddress(senderAddress);
+                    System.out.println("Đã nhận địa chỉ UDP từ client: " + senderAddress);
+                    for (Map.Entry<String, Player> player : Server.players.entrySet()) {
+                        System.out.println("PlayerId: " + player.getKey() + ", UDP Address: " + player.getValue());
+                    }
+                    break;
+                case "MATCH_REQUEST":
+                    // Xử lý yêu cầu match
+                    if(Server.players.containsKey(parts[1])) {
+                        Server.matchMakingQueue.offer(parts[1]); // Thêm client vào danh sách chờ match
+                        System.out.println("Client " + parts[1] + " đã yêu cầu match. Danh sách chờ: " + Server.matchMakingQueue);
+                        if (Server.matchMakingQueue.size() >= 2) {
+                            String player1Id = Server.matchMakingQueue.poll();
+                            String player2Id = Server.matchMakingQueue.poll();
+                            // Tạo phòng chơi mới
+                            GameRoom newRoom = new GameRoom(player1Id, player2Id);
+                            Server.gameRooms.add(newRoom);
+                            System.out.println("Tạo phòng chơi mới giữa " + player1Id + " và " + player2Id);
+                            // Gửi thông báo cho cả hai client về việc bắt đầu trận đấu
+                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player2Id, Server.players.get(player1Id).getTcpChannel());
+                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player1Id, Server.players.get(player2Id).getTcpChannel());
+                            Server.matchMakingQueue.remove(player1Id);
+                            Server.matchMakingQueue.remove(player2Id);
+                            for(GameRoom room : Server.gameRooms) {
+                                System.out.println(room);
+                            }
+                        }
+                    }
+                    else {
+                        System.out.println("Client " + parts[1] + " không tồn tại trong danh sách người chơi.");
+                    }
                     
                     break;
                 case "REQUEST_MATCH":
@@ -120,7 +153,11 @@ public class ClientHandler {
             if (resultSet.next()) {
                 // Đăng nhập thành công
                 System.out.println("login successed: " + username1);
-                sendTcpResponse("LOGIN_SUCCESS", clientChannel);
+                String id= resultSet.getString("id");
+
+                sendTcpResponse("LOGIN_SUCCESS|" + id, clientChannel);
+                Server.players.put(id, new Player((SocketChannel) clientChannel, id));
+   
             } else {
                 // Đăng nhập thất bại
                 System.out.println("Login failed" + username1);
@@ -142,4 +179,5 @@ public class ClientHandler {
             }
         }
     }
+
 }
