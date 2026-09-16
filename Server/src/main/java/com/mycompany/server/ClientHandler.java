@@ -6,10 +6,11 @@ import java.nio.ByteBuffer;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 public class ClientHandler {
 
     // Lưu địa chỉ UDP hiện tại của từng người chơi để server broadcast trạng thái.
-    private static final Map<Integer, SocketAddress> udpClients = new ConcurrentHashMap<>();
+    private static final Map<String, SocketAddress> udpClients = new ConcurrentHashMap<>();
 
     public static void handleClientPacket(String message, Channel clientChannel) {
         handleClientPacket(message, clientChannel, null);
@@ -35,9 +36,10 @@ public class ClientHandler {
                     break;
                 case "MATCH_REQUEST":
                     // Xử lý yêu cầu match
-                    if(Server.players.containsKey(parts[1])) {
+                    if (Server.players.containsKey(parts[1])) {
                         Server.matchMakingQueue.offer(parts[1]); // Thêm client vào danh sách chờ match
-                        System.out.println("Client " + parts[1] + " đã yêu cầu match. Danh sách chờ: " + Server.matchMakingQueue);
+                        System.out.println(
+                                "Client " + parts[1] + " đã yêu cầu match. Danh sách chờ: " + Server.matchMakingQueue);
                         if (Server.matchMakingQueue.size() >= 2) {
                             String player1Id = Server.matchMakingQueue.poll();
                             String player2Id = Server.matchMakingQueue.poll();
@@ -46,19 +48,20 @@ public class ClientHandler {
                             Server.gameRooms.add(newRoom);
                             System.out.println("Tạo phòng chơi mới giữa " + player1Id + " và " + player2Id);
                             // Gửi thông báo cho cả hai client về việc bắt đầu trận đấu
-                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player2Id, Server.players.get(player1Id).getTcpChannel());
-                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player1Id, Server.players.get(player2Id).getTcpChannel());
+                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player2Id + "|" + newRoom.getRoomId() + "|1",
+                                    Server.players.get(player1Id).getTcpChannel());
+                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player1Id + "|" + newRoom.getRoomId() + "|2",
+                                    Server.players.get(player2Id).getTcpChannel());
                             Server.matchMakingQueue.remove(player1Id);
                             Server.matchMakingQueue.remove(player2Id);
-                            for(GameRoom room : Server.gameRooms) {
+                            for (GameRoom room : Server.gameRooms) {
                                 System.out.println(room);
                             }
                         }
-                    }
-                    else {
+                    } else {
                         System.out.println("Client " + parts[1] + " không tồn tại trong danh sách người chơi.");
                     }
-                    
+
                     break;
                 case "REQUEST_MATCH":
                     // Xử lý yêu cầu match
@@ -92,53 +95,117 @@ public class ClientHandler {
 
     private static void handleShoot(String[] parts, DatagramChannel channel, SocketAddress sender)
             throws Exception {
-        // Gói có dạng: SHOOT|playerId|x|y|turretAngle.
-        if (parts.length != 5) return;
-        // Đọc ID của người chơi gửi gói tin.
-        int playerId = Integer.parseInt(parts[1]);
-        // Đọc tọa độ X của viên đạn.
-        double x = Double.parseDouble(parts[2]);
-        // Đọc tọa độ Y của viên đạn.
-        double y = Double.parseDouble(parts[3]);
-        // Đọc góc bắn của viên đạn.
-        double angle = Double.parseDouble(parts[4]);
+        // Gói có dạng: SHOOT|gameRoomId|playerId|x|y|turretAngle.
+        if (parts.length != 6)
+            return;
+        String gameRoomId = parts[1];
+        String playerId = parts[2];
+        double x = Double.parseDouble(parts[3]);
+        double y = Double.parseDouble(parts[4]);
+        double angle = Double.parseDouble(parts[5]);
+
+        String anotherPlayerId = null;
+        for (GameRoom gameRoom : Server.getGameRooms()) {
+            if (gameRoomId.equals(gameRoom.getRoomId())) {
+                if (playerId.equals(gameRoom.getPlayer1Id()))
+                    anotherPlayerId = gameRoom.getPlayer2Id();
+                else
+                    anotherPlayerId = gameRoom.getPlayer1Id();
+                break;
+            }
+        }
+
         // Đăng ký endpoint UDP đầu tiên của player nếu chưa có.
         udpClients.putIfAbsent(playerId, sender);
+
         // Bỏ qua gói nếu playerId đang bị một endpoint khác sở hữu.
-        if (!sender.equals(udpClients.get(playerId))) return;
-        // Tạo lại gói phản hồi để gửi cho các client còn lại.
-        String response = String.format("SHOOT|%d|%.2f|%.2f|%.2f", playerId, x, y, angle);
-        // Duyệt qua danh sách các người chơi đã đăng ký UDP.
-        for (Map.Entry<Integer, SocketAddress> client : udpClients.entrySet()) {
-            // Không gửi lại cho chính người vừa bắn.
-            if (client.getKey() != playerId) channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
+        if (!sender.equals(udpClients.get(playerId)))
+            return;
+
+        // String response = String.format("SHOOT|%s|%.2f|%.2f|%.2f", playerId, x, y,
+        // angle);
+
+        // for (Map.Entry<String, SocketAddress> client : udpClients.entrySet()) {
+        // if (client.getKey() == anotherPlayerId)
+        // channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
+        // }
+
+        if (anotherPlayerId == null)
+            return;
+
+        // 3. Lấy SocketAddress của đối thủ (Ưu tiên lấy từ udpClients, nếu không có thì
+        // lấy từ Server.players)
+        SocketAddress targetAddress = udpClients.get(anotherPlayerId);
+        if (targetAddress == null && Server.players.containsKey(anotherPlayerId)) {
+            targetAddress = Server.players.get(anotherPlayerId).getUdpAddress();
+        }
+
+        // Nếu đối thủ đã mở cổng UDP, tiến hành gửi gói tin sang
+        if (targetAddress != null) {
+            String response = String.format("SHOOT|%s|%.2f|%.2f|%.2f", playerId, x, y, angle);
+            channel.send(ByteBuffer.wrap(response.getBytes()), targetAddress);
+            System.out.println("[Server] Đã chuyển sự kiện SHOOT từ " + playerId + " sang đối thủ " + anotherPlayerId);
+        } else {
+            System.out.println("[Server] Đối thủ " + anotherPlayerId + " chưa cấu hình địa chỉ UDP!");
         }
     }
 
     private static void handleMove(String[] parts, DatagramChannel channel, SocketAddress sender)
             throws Exception {
-        // Định dạng bắt buộc: MOVE|playerId|x|y|bodyAngle|turretAngle
-        if (parts.length != 6) return;
+        // Định dạng bắt buộc: MOVE|gameRoomId|playerId|x|y|bodyAngle|turretAngle
+        if (parts.length != 7)
+            return;
 
-        int playerId = Integer.parseInt(parts[1]);
-        double x = Double.parseDouble(parts[2]);
-        double y = Double.parseDouble(parts[3]);
-        double bodyAngle = Double.parseDouble(parts[4]);
-        double turretAngle = Double.parseDouble(parts[5]);
+        String gameRoomId = parts[1];
+        String playerId = parts[2];
+        double x = Double.parseDouble(parts[3]);
+        double y = Double.parseDouble(parts[4]);
+        double bodyAngle = Double.parseDouble(parts[5]);
+        double turretAngle = Double.parseDouble(parts[6]);
+
+        String anotherPlayerId = null;
+        for (GameRoom gameRoom : Server.getGameRooms()) {
+            if (gameRoomId.equals(gameRoom.getRoomId())) {
+                if (playerId.equals(gameRoom.getPlayer1Id()))
+                    anotherPlayerId = gameRoom.getPlayer2Id();
+                else
+                    anotherPlayerId = gameRoom.getPlayer1Id();
+                break;
+            }
+        }
 
         // Cập nhật endpoint phòng trường hợp client đổi cổng UDP hoặc kết nối lại.
         udpClients.put(playerId, sender);
 
-        String response = String.format(
-                "MOVE|%d|%.2f|%.2f|%.2f|%.2f",
-                playerId, x, y, bodyAngle, turretAngle);
+        // String response = String.format(
+        // "MOVE|%s|%.2f|%.2f|%.2f|%.2f",
+        // playerId, x, y, bodyAngle, turretAngle);
 
-        // Gửi vị trí cho tất cả người chơi khác, không gửi ngược lại người gửi.
-        for (Map.Entry<Integer, SocketAddress> client : udpClients.entrySet()) {
-            if (client.getKey() == playerId) continue;
-            channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
+        // // Gửi vị trí cho tất cả người chơi khác, không gửi ngược lại người gửi.
+        // for (Map.Entry<String, SocketAddress> client : udpClients.entrySet()) {
+        // if (client.getKey() == anotherPlayerId)
+        // channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
+        // }
+
+        if (anotherPlayerId == null)
+            return;
+
+        // 3. Lấy SocketAddress của đối thủ (Ưu tiên lấy từ udpClients, nếu không có thì
+        // lấy từ Server.players)
+        SocketAddress targetAddress = udpClients.get(anotherPlayerId);
+        if (targetAddress == null && Server.players.containsKey(anotherPlayerId)) {
+            targetAddress = Server.players.get(anotherPlayerId).getUdpAddress();
+        }
+
+        // Nếu đối thủ đã mở cổng UDP, tiến hành gửi gói tin sang
+        if (targetAddress != null) {
+            String response = String.format(
+                    "MOVE|%s|%.2f|%.2f|%.2f|%.2f",
+                    playerId, x, y, bodyAngle, turretAngle);
+            channel.send(ByteBuffer.wrap(response.getBytes()), targetAddress);
         }
     }
+
     private static void login(String[] parts, Channel clientChannel) {
         // Xử lý đăng nhập
         String username1 = parts[1];
@@ -146,18 +213,19 @@ public class ClientHandler {
         System.out.println("Đăng nhập: " + username1 + ", Mật khẩu: " + password2);
         try {
             Connection connection = DataBaseManager.getConnection();
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM player where name = ? AND password = ?");
+            PreparedStatement statement = connection
+                    .prepareStatement("SELECT * FROM player where name = ? AND password = ?");
             statement.setString(1, username1);
             statement.setString(2, password2);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 // Đăng nhập thành công
                 System.out.println("login successed: " + username1);
-                String id= resultSet.getString("id");
+                String id = resultSet.getString("id");
 
                 sendTcpResponse("LOGIN_SUCCESS|" + id, clientChannel);
                 Server.players.put(id, new Player((SocketChannel) clientChannel, id));
-   
+
             } else {
                 // Đăng nhập thất bại
                 System.out.println("Login failed" + username1);
@@ -168,6 +236,7 @@ public class ClientHandler {
             e.printStackTrace();
         }
     }
+
     private static void sendTcpResponse(String response, Channel clientChannel) {
         // Gửi phản hồi về client qua TCP
         if (clientChannel instanceof SocketChannel) {

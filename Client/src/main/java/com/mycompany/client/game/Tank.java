@@ -8,7 +8,7 @@ import java.util.List;
  * Thân xe tự xoay mặt theo hướng đang đi.
  */
 public class Tank {
-    private final int idPlayer;
+    private final String idPlayer;
 
     // ── Hằng số ──────────────────────────────────────────────────────────────
     public static final int WIDTH = 36; // px
@@ -38,7 +38,7 @@ public class Tank {
     // ── Trạng thái điều khiển (top-down 4 hướng) ─────────────────────────────
     private boolean moveUp, moveDown, moveLeft, moveRight;
 
-    public Tank(double startX, double startY, String bodyColor, String turretColor, int idPlayer) {
+    public Tank(double startX, double startY, String bodyColor, String turretColor, String idPlayer) {
         this.x = startX;
         this.y = startY;
         this.targetX = startX;
@@ -101,9 +101,9 @@ public class Tank {
         opacity += (targetOpacity - opacity) * OPACITY_LERP;
     }
 
-    private boolean hasMovementInput() {
-        return moveUp || moveDown || moveLeft || moveRight;
-    }
+    // private boolean hasMovementInput() {
+    //     return moveUp || moveDown || moveLeft || moveRight;
+    // }
 
     /**
      * Cập nhật trạng thái inBush dựa trên tile tâm xe tăng.
@@ -248,7 +248,7 @@ public class Tank {
         this.angleTank = angle;
     }
 
-    public int getIdPlayer() {
+    public String getIdPlayer() {
         return idPlayer;
     }
 }

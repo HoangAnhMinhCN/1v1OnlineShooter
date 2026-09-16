@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.mycompany.client.Client;
 import com.mycompany.client.controller.GameController;
 
 import javafx.scene.Scene;
@@ -46,16 +47,25 @@ public class GameScene {
         if (canvas != null) {
             this.gameRender = new GameRender(canvas.getGraphicsContext2D());
 
-            // Tạo danh sách tank và lưu vào field (không dùng biến local)
-            // Hai ID cố định dùng cho lần test local: Client = 0, Client 2 = 1.
-            tanks = createTanks(0, 1);
-            for (Tank tank : tanks) tank.setOtherTanks(tanks);
+            if (Client.getInstance().getMyNumber() == 1)
+                tanks = createTanks(Client.getInstance().getPlayerId(), Client.getInstance().getAnotherPlayerId());
+            else
+                tanks = createTanks(Client.getInstance().getAnotherPlayerId(), Client.getInstance().getPlayerId());
+
+            for (Tank tank : tanks)
+                tank.setOtherTanks(tanks);
             gameRender.setTanks(tanks);
 
-            // Client 1 điều khiển tank có playerId = 0.
-            localTank = tanks.get(0);
-            // Tank còn lại nhận vị trí từ server và được nội suy khi render.
-            tanks.get(1).setRemoteControlled(true);
+            if (Client.getInstance().getMyNumber() == 1) {
+                localTank = tanks.get(0);
+                // Tank còn lại nhận vị trí từ server và được nội suy khi render.
+                tanks.get(1).setRemoteControlled(true);
+            } else {
+                localTank = tanks.get(1);
+                // Tank còn lại nhận vị trí từ server và được nội suy khi render.
+                tanks.get(0).setRemoteControlled(true);
+            }
+
             gameRender.setLocalTank(localTank);
 
             gameRender.setBullets(this.bullets);
@@ -69,7 +79,7 @@ public class GameScene {
 
     // ── Tạo xe tăng ──────────────────────────────────────────────────────────
 
-    private List<Tank> createTanks(int idPlayer1, int idPlayer2) {
+    private List<Tank> createTanks(String idPlayer1, String idPlayer2) {
         List<Tank> result = new ArrayList<>();
 
         // ── Khởi tạo xe tăng Player 1 ──────────────────────────────
@@ -105,7 +115,7 @@ public class GameScene {
         bullets.add(newBullet);
     }
 
-    public void spawnBullet(double x, double y, double angle, int playerId) {
+    public void spawnBullet(double x, double y, double angle, String playerId) {
         // Tạo viên đạn từ dữ liệu nhận được qua UDP.
         bullets.add(new Bullet(x, y, angle, playerId));
     }
@@ -136,18 +146,19 @@ public class GameScene {
      * Lấy tank đối thủ (tank có idPlayer KHÁC với myPlayerId).
      * ServerHandler gọi để cập nhật vị trí tank địch khi nhận gói MOVE từ server.
      */
-    public Tank getEnemyTank(int myPlayerId) {
-        return tanks.stream()
-                .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của mình
-                .findFirst() // lấy phần tử đầu tiên tìm được
-                .orElse(null); // trả null nếu không tìm thấy
-    }
+    // public Tank getEnemyTank(String myPlayerId) {
+    //     return tanks.stream()
+    //             .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của mình
+    //             .findFirst() // lấy phần tử đầu tiên tìm được
+    //             .orElse(null); // trả null nếu không tìm thấy
+    // }
 
-    public Tank getTank(int playerId) {
+    public Tank getTank(String playerId) {
         // Tìm tank tương ứng với playerId server gửi về.
-        if (tanks == null) return null;
+        if (tanks == null)
+            return null;
         return tanks.stream()
-                .filter(t -> t.getIdPlayer() == playerId)
+                .filter(t -> t.getIdPlayer().equals(playerId))
                 .findFirst()
                 .orElse(null);
     }

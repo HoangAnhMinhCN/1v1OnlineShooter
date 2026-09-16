@@ -13,15 +13,18 @@ import java.util.Iterator;
 import javafx.application.Platform;
 
 public class Client {
-    private static final String SERVER_HOST = "localhost";
+    private static final String SERVER_HOST = "26.142.23.65";
     private static final int SERVER_PORT = 12345;
 
     private static Client instance;
     private static String playerId;
+    private String gameRoomId;
+    private String anotherPlayerId;
     private static SocketChannel tcpChannel;
     private static DatagramChannel udpChannel;
     private Selector selector;
     private ConnectionCallback callback;
+    private int myNumber;
 
     public void setConnectionCallback(ConnectionCallback callback) {
         this.callback = callback;
@@ -32,12 +35,39 @@ public class Client {
     public static Client getInstance() {
         return instance;
     }
+
     public String getPlayerId() {
         return playerId;
     }
+
     public static void setPlayerId(String playerId) {
         Client.playerId = playerId;
     }
+
+    public void setGameRoomId(String gameRoomId) {
+        this.gameRoomId = gameRoomId;
+    }
+
+    public String getGameRoomId() {
+        return gameRoomId;
+    }
+
+    public void setAnotherPlayerId(String anotherPlayerId) {
+        this.anotherPlayerId = anotherPlayerId;
+    }
+
+    public String getAnotherPlayerId() {
+        return anotherPlayerId;
+    }
+
+    public void setMyNumber(int number) {
+        myNumber = number;
+    }
+
+    public int getMyNumber() {
+        return myNumber;
+    }
+
     public boolean connect() {
         instance = this;
         try {

@@ -2,6 +2,7 @@ package com.mycompany.client.controller;
 
 import com.mycompany.client.Client;
 import com.mycompany.client.game.GameScene;
+import com.mycompany.client.game.Tank;
 
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -61,9 +62,10 @@ public class GameController {
             if (client != null) {
                 // client.sendData("SHOOT|...");
                 // Lấy tank đang được người chơi điều khiển.
-                com.mycompany.client.game.Tank tank = gameScene.getLocalTank();
+                Tank tank = gameScene.getLocalTank();
                 // Tạo gói UDP gồm loại gói, ID người chơi, tọa độ tâm đạn và góc nòng pháo.
-                String shootPacket = String.format("SHOOT|%d|%.2f|%.2f|%.2f",
+                String shootPacket = String.format("SHOOT|%s|%s|%.2f|%.2f|%.2f",
+                        client.getGameRoomId(),
                         // Ghi ID của người bắn vào gói tin.
                         tank.getIdPlayer(),
                         // Ghi tọa độ X nơi viên đạn xuất hiện.

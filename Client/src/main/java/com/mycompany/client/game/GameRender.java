@@ -1,7 +1,6 @@
 package com.mycompany.client.game;
 
 import com.mycompany.client.Client;
-import java.util.ArrayList;
 import java.util.List;
 
 import javafx.animation.AnimationTimer;
@@ -81,7 +80,8 @@ public class GameRender extends AnimationTimer {
 
         // Tạo packet chứa trạng thái di chuyển của tank
         String packet = String.format(
-                "MOVE|%d|%.2f|%.2f|%.2f|%.2f",
+                "MOVE|%s|%s|%.2f|%.2f|%.2f|%.2f",
+                client.getGameRoomId(),
                 tank.getIdPlayer(), // ID người chơi
                 tank.getX(), // Tọa độ X
                 tank.getY(), // Tọa độ Y
@@ -112,7 +112,8 @@ public class GameRender extends AnimationTimer {
         // Cập nhật nội suy cho tank đối thủ trên JavaFX game loop.
         if (tanks != null) {
             for (Tank tank : tanks) {
-                if (tank != localTank) tank.update();
+                if (tank != localTank)
+                    tank.update();
             }
         }
 
@@ -271,7 +272,19 @@ public class GameRender extends AnimationTimer {
             gc.translate(bullet.getX(), bullet.getY());
             gc.rotate(bullet.getAngle());
 
-            gc.drawImage(bulletP1, -4, -7, 8, 14);
+            if (Client.getInstance().getMyNumber() == 1) {
+                if (Client.getInstance().getPlayerId().equals(bullet.getIdPlayer()))
+                    gc.drawImage(bulletP1, -4, -7, 8, 14);
+                else
+                    gc.drawImage(bulletP2, -4, -7, 8, 14);
+            }
+
+            else {
+                if (Client.getInstance().getPlayerId().equals(bullet.getIdPlayer()))
+                    gc.drawImage(bulletP2, -4, -7, 8, 14);
+                else
+                    gc.drawImage(bulletP1, -4, -7, 8, 14);
+            }
 
             gc.restore();
         }
