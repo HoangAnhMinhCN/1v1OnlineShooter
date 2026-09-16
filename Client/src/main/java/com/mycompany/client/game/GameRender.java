@@ -1,7 +1,6 @@
 package com.mycompany.client.game;
 
 import com.mycompany.client.Client;
-import java.util.ArrayList;
 import java.util.List;
 
 import javafx.animation.AnimationTimer;
@@ -81,7 +80,8 @@ public class GameRender extends AnimationTimer {
 
         // Tạo packet chứa trạng thái di chuyển của tank
         String packet = String.format(
-                "MOVE|%d|%.2f|%.2f|%.2f|%.2f",
+                "MOVE|%s|%s|%.2f|%.2f|%.2f|%.2f",
+                client.getGameRoomId(),
                 tank.getIdPlayer(), // ID người chơi
                 tank.getX(), // Tọa độ X
                 tank.getY(), // Tọa độ Y

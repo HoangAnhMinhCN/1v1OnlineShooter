@@ -147,6 +147,9 @@ public class Server {
         }
     }
 
+    public static HashSet<GameRoom> getGameRooms() {
+        return gameRooms;
+    }
     
  
     public static void main(String[] args) {

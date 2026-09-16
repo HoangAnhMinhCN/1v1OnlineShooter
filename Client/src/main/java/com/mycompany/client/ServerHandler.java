@@ -39,7 +39,7 @@ public class ServerHandler {
                     // Kiểm tra gói có đủ 5 trường: SHOOT, ID, X, Y và góc bắn.
                     if (parts.length == 5) {
                         // Đọc ID của người chơi đã bắn.
-                        int playerId = Integer.parseInt(parts[1]);
+                        String playerId = parts[1];
                         // Đọc tọa độ X của viên đạn.
                         double x = Double.parseDouble(parts[2]);
                         // Đọc tọa độ Y của viên đạn.
@@ -54,13 +54,13 @@ public class ServerHandler {
                 // tank di chuyen
                 case "MOVE":
                     // parts = ["MOVE", "1", "120.50", "340.00", "90.00", "135.00"]
-                    int playerId = Integer.parseInt(parts[1]); // Id nguoi nguoi goi tin
+                    String playerId = parts[1]; // Id nguoi gui goi tin
                     double x = Double.parseDouble(parts[2]); // toa do x
                     double y = Double.parseDouble(parts[3]); // toa do y
                     double bodyAngle = Double.parseDouble(parts[4]); // goc than xe
                     double turretAngle = Double.parseDouble(parts[5]); // goc nòng pháo
 
-                    // chay trn javafx thread de cap nhat ui cho object
+                    // chay tren javafx thread de cap nhat ui cho object
 
                     Platform.runLater(() -> {
                         // Lay Tank doi thu
@@ -74,6 +74,11 @@ public class ServerHandler {
                         }
 
                     });
+                    break;
+                
+                case "MATCH_FOUND":
+                    Client.getInstance().setGameRoomId(parts[1]);
+                    Platform.runLater(() -> SceneController.getInstance().showGameUI());
                     break;
 
                 default:

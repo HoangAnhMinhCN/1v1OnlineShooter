@@ -18,6 +18,8 @@ public class Client {
 
     private static Client instance;
     private static String playerId;
+    private String gameRoomId;
+    private String anotherPlayerId;
     private static SocketChannel tcpChannel;
     private static DatagramChannel udpChannel;
     private Selector selector;
@@ -32,12 +34,31 @@ public class Client {
     public static Client getInstance() {
         return instance;
     }
+
     public String getPlayerId() {
         return playerId;
     }
+
     public static void setPlayerId(String playerId) {
         Client.playerId = playerId;
     }
+
+    public void setGameRoomId(String gameRoomId) {
+        this.gameRoomId = gameRoomId;
+    }
+
+    public String getGameRoomId() {
+        return gameRoomId;
+    }
+
+    public void setAnotherPlayerId(String anotherPlayerId) {
+        this.anotherPlayerId = anotherPlayerId;
+    }
+
+    public String getAnotherPlayerId() {
+        return anotherPlayerId;
+    }
+
     public boolean connect() {
         instance = this;
         try {

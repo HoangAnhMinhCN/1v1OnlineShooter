@@ -8,11 +8,11 @@ public class Bullet {
     private double speedY;
     private double angle;
     private boolean active; // true: đang bay, false: biến mất
-    private int idPlayer;
+    private String idPlayer;
 
     private static final double SPEED = 8.0; // Tốc độ bay của đạn
 
-    public Bullet(double x, double y, double angle, int idPlayer) {
+    public Bullet(double x, double y, double angle, String idPlayer) {
         this.x = x;
         this.y = y;
         this.angle = angle;
@@ -26,7 +26,7 @@ public class Bullet {
     }
 
     // Constructor phục vụ việc tạo chuỗi ID nếu cần đồng bộ Server
-    public Bullet(String id, double x, double y, double angle, int idPlayer) {
+    public Bullet(String id, double x, double y, double angle, String idPlayer) {
         this(x, y, angle, idPlayer);
         this.id = id;
     }
@@ -68,7 +68,7 @@ public class Bullet {
         this.id = id;
     }
 
-    public int getIdPlayer() {
+    public String getIdPlayer() {
         return idPlayer;
     }
 
