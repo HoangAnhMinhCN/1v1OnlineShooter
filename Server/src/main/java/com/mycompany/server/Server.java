@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
+    private static final String SERVER_HOST = "26.142.23.65";
     private static final int PORT = 12345;
     private Selector selector;
     private ServerSocketChannel tcpServerChannel;
@@ -28,13 +29,13 @@ public class Server {
             // 2. Khởi tạo TCP Channel (Non-blocking)
             tcpServerChannel = ServerSocketChannel.open();
             tcpServerChannel.configureBlocking(false);
-            tcpServerChannel.bind(new InetSocketAddress(PORT));
+            tcpServerChannel.bind(new InetSocketAddress(SERVER_HOST, PORT));
             tcpServerChannel.register(selector, SelectionKey.OP_ACCEPT);
 
             // 3. Khởi tạo UDP Channel (Non-blocking)
             udpServerChannel = DatagramChannel.open();
             udpServerChannel.configureBlocking(false);
-            udpServerChannel.bind(new InetSocketAddress(PORT));
+            udpServerChannel.bind(new InetSocketAddress(SERVER_HOST, PORT));
             udpServerChannel.register(selector, SelectionKey.OP_READ);
 
             System.out.println("[NIO Server] Đã khởi động trên port " + PORT);
