@@ -13,7 +13,7 @@ import java.util.Iterator;
 import javafx.application.Platform;
 
 public class Client {
-    private static final String SERVER_HOST = "localhost";
+    private static final String SERVER_HOST = "26.142.23.65";
     private static final int SERVER_PORT = 12345;
 
     private static Client instance;
@@ -24,6 +24,7 @@ public class Client {
     private static DatagramChannel udpChannel;
     private Selector selector;
     private ConnectionCallback callback;
+    private String idPlayer;
 
     public void setConnectionCallback(ConnectionCallback callback) {
         this.callback = callback;
