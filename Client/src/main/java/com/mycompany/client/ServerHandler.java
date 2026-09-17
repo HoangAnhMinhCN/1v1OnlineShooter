@@ -1,7 +1,5 @@
 package com.mycompany.client;
 
-import com.mycompany.client.game.Tank;
-import com.mycompany.client.game.GameScene;
 import java.nio.channels.Channel;
 
 import com.mycompany.client.controller.SceneController;
@@ -38,39 +36,11 @@ public class ServerHandler {
                     break;
 
                 case "SHOOT":
-                    // Kiểm tra gói có đủ 5 trường: SHOOT, ID, X, Y và góc bắn.
-                    if (parts.length == 5) {
-                        String playerId = parts[1];
-                        double x = Double.parseDouble(parts[2]);
-                        double y = Double.parseDouble(parts[3]);
-                        double angle = Double.parseDouble(parts[4]);
-
-                        // Đưa việc tạo đạn lên JavaFX Application Thread.
-                        Platform.runLater(() -> GameScene.getInstance().spawnBullet(x, y, angle, playerId));
-                    }
+                    ShootingPacketHandler.handle(parts);
                     break;
 
-                // tank di chuyen
                 case "MOVE":
-                    // parts = ["MOVE", "1", "120.50", "340.00", "90.00", "135.00"]
-                    String playerId = parts[1]; // Id nguoi gui goi tin
-                    double x = Double.parseDouble(parts[2]); // toa do x
-                    double y = Double.parseDouble(parts[3]); // toa do y
-                    double bodyAngle = Double.parseDouble(parts[4]); // goc than xe
-                    double turretAngle = Double.parseDouble(parts[5]); // goc nòng pháo
-
-                    Platform.runLater(() -> {
-                        // Lay Tank doi thu
-                        // Tìm đúng tank theo ID trong packet, tránh cập nhật nhầm tank khác.
-                        Tank enemy = GameScene.getInstance().getTank(playerId);
-                        if (enemy != null) {
-                            // Chỉ đặt vị trí mục tiêu; Tank sẽ nội suy để chuyển động mượt.
-                            enemy.setTargetPosition(x, y);
-                            enemy.setTurretAngle(turretAngle); // cap nhat huong phao
-                            enemy.setAngle(bodyAngle); // cap nhat huong than xe
-                        }
-
-                    });
+                    MovementPacketHandler.handle(parts);
                     break;
 
                 case "MATCH_FOUND":
