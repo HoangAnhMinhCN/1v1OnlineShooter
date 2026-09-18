@@ -1,6 +1,7 @@
 package com.mycompany.client.game;
 
 import com.mycompany.client.Client;
+import com.mycompany.client.GamePacketSender;
 import java.util.List;
 
 import javafx.animation.AnimationTimer;
@@ -79,7 +80,7 @@ public class GameRender extends AnimationTimer {
 
         // Giới hạn tần suất gửi trạng thái di chuyển còn 20 gói/giây.
         if (localTank != null && now - lastPositionSendNanos >= POSITION_SEND_INTERVAL_NANOS) {
-            sendPositionToServer(localTank);
+            GamePacketSender.sendMove(Client.getInstance(), localTank);
             lastPositionSendNanos = now;
         }
     }
@@ -116,21 +117,4 @@ public class GameRender extends AnimationTimer {
         }
     }
 
-    private void sendPositionToServer(Tank tank) {
-        Client client = Client.getInstance();
-        if (client == null) {
-            return;
-        }
-
-        // Định dạng: MOVE|gameRoomId|playerId|x|y|bodyAngle|turretAngle.
-        String packet = String.format(
-                "MOVE|%s|%s|%.2f|%.2f|%.2f|%.2f",
-                client.getGameRoomId(),
-                tank.getIdPlayer(),
-                tank.getX(),
-                tank.getY(),
-                tank.getAngle(),
-                tank.getTurretAngle());
-        client.sendUdpData(packet);
-    }
 }

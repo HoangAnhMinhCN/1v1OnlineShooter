@@ -1,6 +1,7 @@
 package com.mycompany.client.controller;
 
 import com.mycompany.client.Client;
+import com.mycompany.client.GamePacketSender;
 import com.mycompany.client.game.GameScene;
 import com.mycompany.client.game.Tank;
 
@@ -60,22 +61,9 @@ public class GameController {
 
             // 2. Gửi gói tin thông báo bắn lên Server (nếu đánh Online)
             if (client != null) {
-                // client.sendData("SHOOT|...");
                 // Lấy tank đang được người chơi điều khiển.
                 Tank tank = gameScene.getLocalTank();
-                // Tạo gói UDP gồm loại gói, ID người chơi, tọa độ tâm đạn và góc nòng pháo.
-                String shootPacket = String.format("SHOOT|%s|%s|%.2f|%.2f|%.2f",
-                        client.getGameRoomId(),
-                        // Ghi ID của người bắn vào gói tin.
-                        tank.getIdPlayer(),
-                        // Ghi tọa độ X nơi viên đạn xuất hiện.
-                        tank.getCenterX(),
-                        // Ghi tọa độ Y nơi viên đạn xuất hiện.
-                        tank.getCenterY(),
-                        // Ghi góc bắn của nòng pháo.
-                        tank.getTurretAngle());
-                // Gửi gói bắn đạn đến server bằng UDP.
-                client.sendUdpData(shootPacket);
+                GamePacketSender.sendShoot(client, tank);
             }
         }
     }
