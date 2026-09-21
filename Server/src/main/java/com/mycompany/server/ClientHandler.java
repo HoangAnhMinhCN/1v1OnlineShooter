@@ -7,6 +7,8 @@ import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.mycompany.server.game.ServerTank;
+
 public class ClientHandler {
 
     // Lưu địa chỉ UDP hiện tại của từng người chơi để server broadcast trạng thái.
@@ -14,6 +16,21 @@ public class ClientHandler {
 
     public static void handleClientPacket(String message, Channel clientChannel) {
         handleClientPacket(message, clientChannel, null);
+    }
+
+    // hàm gửi packet cho udpAdress trong phòng
+    public static String buildState(GameRoom room) {
+        ServerTank p1 = Server.gameEngine.getTank(room.getPlayer1Id());
+        ServerTank p2 = Server.gameEngine.getTank(room.getPlayer2Id());
+
+        return String.format(
+                "STATE|%s|%d|%d|%d|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f",
+                room.getRoomId(),
+                Server.gameEngine.getServerTick(),
+                p1.getLastInputSeq(),
+                p2.getLastInputSeq(),
+                p1.getX(), p1.getY(), p1.getBodyAngle(), p1.getTurretAngle(),
+                p2.getX(), p2.getY(), p2.getBodyAngle(), p2.getTurretAngle());
     }
 
     private static void handleInput(String[] parts) {
