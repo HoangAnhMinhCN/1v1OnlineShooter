@@ -16,6 +16,27 @@ public class ClientHandler {
         handleClientPacket(message, clientChannel, null);
     }
 
+    private static void handleInput(String[] parts) {
+        // INPUT|roomId|playerId|seq|keys|turretAngle
+        if (parts.length != 6)
+            return;
+
+        try {
+            String roomId = parts[1];
+            String playerId = parts[2];
+            long seq = Long.parseLong(parts[3]);
+            int keys = Integer.parseInt(parts[4]);
+            double turretAngle = Double.parseDouble(parts[5]);
+
+            if (keys < 0 || keys > 15)
+                return;
+
+            Server.gameEngine.applyInput(roomId, playerId, seq, keys, turretAngle);
+        } catch (NumberFormatException ignored) {
+            // packet lỗi: bỏ
+        }
+    }
+
     // Hàm này dùng chung cho TCP và UDP; senderAddress chỉ có giá trị với UDP.
     public static void handleClientPacket(String message, Channel clientChannel, SocketAddress senderAddress) {
         // Xử lý tin nhắn nhận được từ client
@@ -71,16 +92,15 @@ public class ClientHandler {
                     // Xử lý tin nhắn chat
                     break;
 
-                case "MOVE":
-                    // Packet MOVE chứa vị trí và góc quay của xe do client gửi lên.
-                    if (clientChannel instanceof DatagramChannel && senderAddress != null) {
-                        handleMove(parts, (DatagramChannel) clientChannel, senderAddress);
-                    }
-                    break;
+                // case "MOVE":
+                // // Packet MOVE chứa vị trí và góc quay của xe do client gửi lên.
+                // if (clientChannel instanceof DatagramChannel && senderAddress != null) {
+                // handleMove(parts, (DatagramChannel) clientChannel, senderAddress);
+                // }
+                // break;
                 case "INPUT":
-                    // INPUT|roomId|playerId|seq|keys|turretAngle
                     if (clientChannel instanceof DatagramChannel && senderAddress != null) {
-                        handleInput(parts, senderAddress);
+                        handleInput(parts);
                     }
                     break;
                 case "SHOOT":
