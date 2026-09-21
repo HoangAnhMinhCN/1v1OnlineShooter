@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.*;
+import com.mycompany.server.game.GameEngine;
 
 
 public class Server {
@@ -20,6 +21,7 @@ public class Server {
     public static ConcurrentHashMap<String, Player> players = new ConcurrentHashMap<>();
     public static ArrayDeque<String> matchMakingQueue = new ArrayDeque<>();
     public static HashSet<GameRoom> gameRooms = new HashSet<>();
+    public static final GameEngine gameEngine = new GameEngine();
 
 
     public Server() {

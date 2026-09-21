@@ -46,6 +46,7 @@ public class ClientHandler {
                             // Tạo phòng chơi mới
                             GameRoom newRoom = new GameRoom(player1Id, player2Id);
                             Server.gameRooms.add(newRoom);
+                            Server.gameEngine.createMatch(newRoom);
                             System.out.println("Tạo phòng chơi mới giữa " + player1Id + " và " + player2Id);
                             // Gửi thông báo cho cả hai client về việc bắt đầu trận đấu
                             ClientHandler.sendTcpResponse("MATCH_FOUND|" + player2Id + "|" + newRoom.getRoomId() + "|1",
@@ -76,6 +77,12 @@ public class ClientHandler {
                         handleMove(parts, (DatagramChannel) clientChannel, senderAddress);
                     }
                     break;
+                case "INPUT":
+                    // INPUT|roomId|playerId|seq|keys|turretAngle
+                    if (clientChannel instanceof DatagramChannel && senderAddress != null) {
+                        handleInput(parts, senderAddress);
+                    }
+                    break;
                 case "SHOOT":
                     // Chỉ xử lý SHOOT nếu gói tin đến từ kênh UDP và có địa chỉ người gửi.
                     if (clientChannel instanceof DatagramChannel && senderAddress != null) {
@@ -91,6 +98,46 @@ public class ClientHandler {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * Nhận input thay vì nhận tọa độ. GameEngine sẽ là nơi duy nhất mô phỏng và
+     * quyết định vị trí chính thức của xe tăng.
+     */
+    private static void handleInput(String[] parts, SocketAddress sender) {
+        if (parts.length != 6) {
+            return;
+        }
+
+        try {
+            String roomId = parts[1];
+            String playerId = parts[2];
+            long sequence = Long.parseLong(parts[3]);
+            int keys = Integer.parseInt(parts[4]);
+            double turretAngle = Double.parseDouble(parts[5]);
+
+            // Chúng ta chấp nhận 4 bit điều khiển UP/DOWN/LEFT/RIGHT.
+            if (sequence < 0 || keys < 0 || keys > 15 || !Double.isFinite(turretAngle)) {
+                return;
+            }
+
+            if (!Server.players.containsKey(playerId)) {
+                return;
+            }
+
+            boolean accepted = Server.gameEngine.applyInput(
+                    roomId, playerId, sequence, keys, turretAngle);
+
+            if (accepted) {
+                // Tạm thời gắn endpoint từ packet INPUT.
+                // Bước session sau sẽ xác thực sessionId trước khi
+                // cho phép cập nhật endpoint này.
+                udpClients.put(playerId, sender);
+                Server.players.get(playerId).setUdpAddress(sender);
+            }
+        } catch (NumberFormatException ignored) {
+            // Datagram lỗi: bỏ qua, không để nó ảnh hưởng đến event loop.
+        }
     }
 
     private static void handleShoot(String[] parts, DatagramChannel channel, SocketAddress sender)
@@ -121,14 +168,6 @@ public class ClientHandler {
         // Bỏ qua gói nếu playerId đang bị một endpoint khác sở hữu.
         if (!sender.equals(udpClients.get(playerId)))
             return;
-
-        // String response = String.format("SHOOT|%s|%.2f|%.2f|%.2f", playerId, x, y,
-        // angle);
-
-        // for (Map.Entry<String, SocketAddress> client : udpClients.entrySet()) {
-        // if (client.getKey() == anotherPlayerId)
-        // channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
-        // }
 
         if (anotherPlayerId == null)
             return;
@@ -176,16 +215,6 @@ public class ClientHandler {
 
         // Cập nhật endpoint phòng trường hợp client đổi cổng UDP hoặc kết nối lại.
         udpClients.put(playerId, sender);
-
-        // String response = String.format(
-        // "MOVE|%s|%.2f|%.2f|%.2f|%.2f",
-        // playerId, x, y, bodyAngle, turretAngle);
-
-        // // Gửi vị trí cho tất cả người chơi khác, không gửi ngược lại người gửi.
-        // for (Map.Entry<String, SocketAddress> client : udpClients.entrySet()) {
-        // if (client.getKey() == anotherPlayerId)
-        // channel.send(ByteBuffer.wrap(response.getBytes()), client.getValue());
-        // }
 
         if (anotherPlayerId == null)
             return;
