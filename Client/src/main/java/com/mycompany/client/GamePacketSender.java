@@ -7,6 +7,8 @@ public final class GamePacketSender {
     private GamePacketSender() {
     }
 
+    private static long nextInputSeq;
+
     public static void sendMove(Client client, Tank tank) {
         if (client == null || tank == null) {
             return;
@@ -19,6 +21,21 @@ public final class GamePacketSender {
                 tank.getX(),
                 tank.getY(),
                 tank.getAngle(),
+                tank.getTurretAngle());
+
+        client.sendUdpData(packet);
+    }
+
+    public static void sendInput(Client client, Tank tank) {
+        if (client == null || tank == null)
+            return;
+
+        String packet = String.format(
+                "INPUT|%s|%s|%d|%d|%.2f",
+                client.getGameRoomId(),
+                client.getPlayerId(),
+                nextInputSeq++,
+                tank.getInputMask(),
                 tank.getTurretAngle());
 
         client.sendUdpData(packet);
