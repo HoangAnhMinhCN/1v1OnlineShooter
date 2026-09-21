@@ -3,6 +3,7 @@ package com.mycompany.server;
 import java.sql.*;
 import java.nio.channels.*;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +32,37 @@ public class ClientHandler {
                 p2.getLastInputSeq(),
                 p1.getX(), p1.getY(), p1.getBodyAngle(), p1.getTurretAngle(),
                 p2.getX(), p2.getY(), p2.getBodyAngle(), p2.getTurretAngle());
+    }
+
+    /** Sends the authoritative snapshot of every active room to both players. */
+    public static void broadcastStates(DatagramChannel channel) {
+        for (GameRoom room : Server.getGameRooms()) {
+            ServerTank p1 = Server.gameEngine.getTank(room.getPlayer1Id());
+            ServerTank p2 = Server.gameEngine.getTank(room.getPlayer2Id());
+            if (p1 == null || p2 == null) {
+                continue;
+            }
+
+            String state = buildState(room);
+            sendUdpState(channel, state, room.getPlayer1Id());
+            sendUdpState(channel, state, room.getPlayer2Id());
+        }
+    }
+
+    private static void sendUdpState(DatagramChannel channel, String state, String playerId) {
+        SocketAddress address = udpClients.get(playerId);
+        if (address == null && Server.players.containsKey(playerId)) {
+            address = Server.players.get(playerId).getUdpAddress();
+        }
+        if (address == null) {
+            return;
+        }
+
+        try {
+            channel.send(ByteBuffer.wrap(state.getBytes(StandardCharsets.UTF_8)), address);
+        } catch (Exception e) {
+            System.err.println("Could not send STATE to player " + playerId + ": " + e.getMessage());
+        }
     }
 
     @Deprecated

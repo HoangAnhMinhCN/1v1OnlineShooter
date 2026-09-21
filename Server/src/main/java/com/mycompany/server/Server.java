@@ -22,6 +22,7 @@ public class Server {
     public static HashSet<GameRoom> gameRooms = new HashSet<>();
     public static final GameEngine gameEngine = new GameEngine();
     private static final long TICK_NANOS = 16_666_667L; // 60 tick/s
+    private static final int STATE_SEND_INTERVAL_TICKS = 3; // 20 STATE/s
     private long nextTickNanos = System.nanoTime();
 
     public Server() {
@@ -61,6 +62,9 @@ public class Server {
             long now = System.nanoTime();
             while (now >= nextTickNanos) {
                 gameEngine.tick();
+                if (gameEngine.getServerTick() % STATE_SEND_INTERVAL_TICKS == 0) {
+                    ClientHandler.broadcastStates(udpServerChannel);
+                }
                 nextTickNanos += TICK_NANOS;
             }
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
