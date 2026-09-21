@@ -33,7 +33,8 @@ public class ClientHandler {
                 p2.getX(), p2.getY(), p2.getBodyAngle(), p2.getTurretAngle());
     }
 
-    private static void handleInput(String[] parts) {
+    @Deprecated
+    private static void handleLegacyInput(String[] parts) {
         // INPUT|roomId|playerId|seq|keys|turretAngle
         if (parts.length != 6)
             return;
@@ -117,7 +118,7 @@ public class ClientHandler {
                 // break;
                 case "INPUT":
                     if (clientChannel instanceof DatagramChannel && senderAddress != null) {
-                        handleInput(parts);
+                        handleInput(parts, senderAddress);
                     }
                     break;
                 case "SHOOT":
