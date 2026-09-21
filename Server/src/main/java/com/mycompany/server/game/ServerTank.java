@@ -29,7 +29,7 @@ public final class ServerTank {
         this.turretAngle = turretAngle;
     }
 
-    public void simulate() {
+    public void simulateTick() {
         double dx = 0;
         double dy = 0;
 
