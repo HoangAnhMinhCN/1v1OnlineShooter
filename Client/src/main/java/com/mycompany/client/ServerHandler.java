@@ -43,10 +43,6 @@ public class ServerHandler {
                     StatePacketHandler.handle(parts);
                     break;
 
-                case "MOVE":
-                    MovementPacketHandler.handle(parts);
-                    break;
-
                 case "MATCH_FOUND":
                     Client.getInstance().setGameRoomId(parts[2]);
                     Client.getInstance().setAnotherPlayerId(parts[1]);

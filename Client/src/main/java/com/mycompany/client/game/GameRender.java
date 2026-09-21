@@ -82,7 +82,6 @@ public class GameRender extends AnimationTimer {
 
         // Giới hạn tần suất gửi trạng thái di chuyển còn 20 gói/giây.
         if (localTank != null && now - lastPositionSendNanos >= POSITION_SEND_INTERVAL_NANOS) {
-            // GamePacketSender.sendMove(Client.getInstance(), localTank);
             GamePacketSender.sendInput(Client.getInstance(), localTank);
             lastPositionSendNanos = now;
         }
