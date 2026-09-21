@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.*;
 import com.mycompany.server.game.GameEngine;
 
-
 public class Server {
     private static final String SERVER_HOST = "26.142.23.65";
     private static final int PORT = 12345;
@@ -22,7 +21,8 @@ public class Server {
     public static ArrayDeque<String> matchMakingQueue = new ArrayDeque<>();
     public static HashSet<GameRoom> gameRooms = new HashSet<>();
     public static final GameEngine gameEngine = new GameEngine();
-
+    private static final long TICK_NANOS = 16_666_667L; // 60 tick/s
+    private long nextTickNanos = System.nanoTime();
 
     public Server() {
         try {
@@ -54,7 +54,15 @@ public class Server {
 
         while (true) {
             // Dừng chờ cho đến khi có ít nhất 1 sự kiện I/O sẵn sàng
-            selector.select();
+            // server cập nhật game 60/s kể cả client không gửi dữ liệu, để tránh lag khi
+            // client mới kết nối
+            selector.select(2);
+
+            long now = System.nanoTime();
+            while (now >= nextTickNanos) {
+                gameEngine.tick();
+                nextTickNanos += TICK_NANOS;
+            }
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
             Iterator<SelectionKey> iter = selectedKeys.iterator();
 
@@ -99,7 +107,8 @@ public class Server {
                                 buffer.get(data);
                                 String msg = new String(data).trim();
                                 System.out.println("[TCP Received]: " + msg);
-                                ClientHandler.handleClientPacket(msg, clientChannel); // Gọi hàm xử lý tin nhắn từ client
+                                ClientHandler.handleClientPacket(msg, clientChannel); // Gọi hàm xử lý tin nhắn từ
+                                                                                      // client
                                 // Xử lý tin nhắn nhận được
                             }
                         } catch (Exception e) {
@@ -153,8 +162,7 @@ public class Server {
     public static HashSet<GameRoom> getGameRooms() {
         return gameRooms;
     }
-    
- 
+
     public static void main(String[] args) {
         new Server();
     }
