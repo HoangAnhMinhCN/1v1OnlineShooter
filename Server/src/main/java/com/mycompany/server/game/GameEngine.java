@@ -1,6 +1,7 @@
 package com.mycompany.server.game;
 
 import com.mycompany.server.GameRoom;
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -61,5 +62,10 @@ public final class GameEngine {
 
     public GameRoom getRoom(String roomId) {
         return roomsById.get(roomId);
+    }
+
+    /** Returns the active rooms managed by this engine. */
+    public Collection<GameRoom> getRooms() {
+        return roomsById.values();
     }
 }

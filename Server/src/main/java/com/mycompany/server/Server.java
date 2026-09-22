@@ -19,7 +19,6 @@ public class Server {
     private Set<SocketChannel> tcpClients = new HashSet<>();
     public static ConcurrentHashMap<String, Player> players = new ConcurrentHashMap<>();
     public static ArrayDeque<String> matchMakingQueue = new ArrayDeque<>();
-    public static HashSet<GameRoom> gameRooms = new HashSet<>();
     public static final GameEngine gameEngine = new GameEngine();
     private static final long TICK_NANOS = 16_666_667L; // 60 tick/s
     private static final int STATE_SEND_INTERVAL_TICKS = 3; // 20 STATE/s
@@ -161,10 +160,6 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public static HashSet<GameRoom> getGameRooms() {
-        return gameRooms;
     }
 
     public static void main(String[] args) {

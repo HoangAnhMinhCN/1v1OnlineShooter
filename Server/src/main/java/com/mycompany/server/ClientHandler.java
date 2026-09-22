@@ -85,7 +85,6 @@ public final class ClientHandler {
         }
 
         GameRoom room = new GameRoom(player1Id, player2Id);
-        Server.gameRooms.add(room);
         Server.gameEngine.createMatch(room);
 
         sendTcpResponse("MATCH_FOUND|" + player2Id + "|" + room.getRoomId() + "|1",
@@ -141,7 +140,7 @@ public final class ClientHandler {
 
     /** Sends authoritative snapshots to both players of every active room. */
     public static void broadcastStates(DatagramChannel channel) {
-        for (GameRoom room : Server.getGameRooms()) {
+        for (GameRoom room : Server.gameEngine.getRooms()) {
             String state = buildState(room);
             if (state == null) {
                 continue;
