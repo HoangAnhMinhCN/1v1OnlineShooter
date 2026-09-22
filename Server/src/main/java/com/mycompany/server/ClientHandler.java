@@ -43,14 +43,22 @@ public class ClientHandler {
                         if (Server.matchMakingQueue.size() >= 2) {
                             String player1Id = Server.matchMakingQueue.poll();
                             String player2Id = Server.matchMakingQueue.poll();
+
+                            Player p1 = Server.players.get(player1Id);
+                            Player p2 = Server.players.get(player2Id);
+
                             // Tạo phòng chơi mới
                             GameRoom newRoom = new GameRoom(player1Id, player2Id);
                             Server.gameRooms.add(newRoom);
                             System.out.println("Tạo phòng chơi mới giữa " + player1Id + " và " + player2Id);
                             // Gửi thông báo cho cả hai client về việc bắt đầu trận đấu
-                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player2Id + "|" + newRoom.getRoomId() + "|1",
+                            ClientHandler.sendTcpResponse(
+                                    "MATCH_FOUND|" + player2Id + "|" + newRoom.getRoomId() + "|1" + "|"
+                                            + p2.getPlayerName(),
                                     Server.players.get(player1Id).getTcpChannel());
-                            ClientHandler.sendTcpResponse("MATCH_FOUND|" + player1Id + "|" + newRoom.getRoomId() + "|2",
+                            ClientHandler.sendTcpResponse(
+                                    "MATCH_FOUND|" + player1Id + "|" + newRoom.getRoomId() + "|2" + "|"
+                                            + p1.getPlayerName(),
                                     Server.players.get(player2Id).getTcpChannel());
                             Server.matchMakingQueue.remove(player1Id);
                             Server.matchMakingQueue.remove(player2Id);
@@ -63,9 +71,7 @@ public class ClientHandler {
                     }
 
                     break;
-                case "REQUEST_MATCH":
-                    // Xử lý yêu cầu match
-                    break;
+
                 case "CHAT":
                     // Xử lý tin nhắn chat
                     break;
@@ -222,9 +228,10 @@ public class ClientHandler {
                 // Đăng nhập thành công
                 System.out.println("login successed: " + username1);
                 String id = resultSet.getString("id");
+                String name = resultSet.getString("name");
 
-                sendTcpResponse("LOGIN_SUCCESS|" + id, clientChannel);
-                Server.players.put(id, new Player((SocketChannel) clientChannel, id));
+                sendTcpResponse("LOGIN_SUCCESS|" + id + "|" + name, clientChannel);
+                Server.players.put(id, new Player((SocketChannel) clientChannel, id, name));
 
             } else {
                 // Đăng nhập thất bại

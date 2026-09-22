@@ -15,10 +15,10 @@ public class ServerHandler {
             String type = parts[0];
             switch (type) {
                 case "LOGIN_SUCCESS":
-                    Client.getInstance().setPlayerId(parts[1]);
+                    Client.getInstance().setPlayerId(parts[1]); // Lưu ID người chơi vào Client
+                    Client.getInstance().setPlayerName(parts[2]);
                     // Đăng nhập thành công → chuyển sang màn hình Lobby
                     Platform.runLater(() -> SceneController.getInstance().showLobbyUI());
-                    Client.setPlayerId(parts[1]); // Lưu ID người chơi vào Client
                     Client.sendUdpData("UDP_ADDRESS|" + Client.getInstance().getPlayerId()); // Gửi địa chỉ UDP của
                                                                                              // client lên server
                     break;
@@ -47,7 +47,7 @@ public class ServerHandler {
                     Client.getInstance().setGameRoomId(parts[2]);
                     Client.getInstance().setAnotherPlayerId(parts[1]);
                     Client.getInstance().setMyNumber(Integer.parseInt(parts[3]));
-                    Platform.runLater(() -> SceneController.getInstance().showGameUI());
+                    Platform.runLater(() -> SceneController.getInstance().showGameUI(parts[4]));
                     break;
 
                 default:

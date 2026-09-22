@@ -39,9 +39,6 @@ public class SceneController {
             FXMLLoader loader = new FXMLLoader(fxmlLocation);
             Pane root = loader.load();
 
-            LoginController loginController = loader.getController();
-            loginController.setClient(client);
-
             Scene scene = new Scene(root);
             primaryStage.setTitle("1v1 Online Shooter");
             primaryStage.setScene(scene);
@@ -60,7 +57,7 @@ public class SceneController {
             Pane root = loader.load();
 
             LobbyController lobbyController = loader.getController();
-            lobbyController.setClient(client);
+            lobbyController.initNamePlayer(client);
 
             Scene scene = new Scene(root);
             primaryStage.setScene(scene);
@@ -71,7 +68,7 @@ public class SceneController {
         }
     }
 
-    public void showGameUI() {
+    public void showGameUI(String anotherPlayerName) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/game.fxml"));
             StackPane root = loader.load();
@@ -80,6 +77,7 @@ public class SceneController {
             GameController gameController = loader.getController();
             if (gameController != null) {
                 gameController.setClient(client);
+                gameController.initPlayerNames(client.getPlayerName(), anotherPlayerName);
             }
 
             // 2. Khởi tạo GameScene với root và controller

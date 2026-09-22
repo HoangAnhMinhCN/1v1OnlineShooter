@@ -17,7 +17,7 @@ public class TestLauncher extends Application {
             @Override
             public void onConnectSuccess() {
                 SceneController.getInstance().init(stage, client);
-                SceneController.getInstance().showGameUI();
+                SceneController.getInstance().showGameUI("...");
             }
 
             @Override
