@@ -224,7 +224,8 @@ public final class ClientHandler {
                 }
 
                 String playerId = resultSet.getString("id");
-                Server.players.put(playerId, new Player((SocketChannel) clientChannel, playerId));
+                String name = resultSet.getString("name");
+                Server.players.put(playerId, new Player((SocketChannel) clientChannel, playerId, name));
                 sendTcpResponse("LOGIN_SUCCESS|" + playerId, clientChannel);
             }
         } catch (SQLException e) {
