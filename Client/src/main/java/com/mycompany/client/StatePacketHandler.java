@@ -13,6 +13,7 @@ public final class StatePacketHandler {
     }
 
     public static void handle(String[] parts) {
+        // ack server đã chấp nhận iput có thứ rự ack
         // STATE|roomId|tick|ack1|ack2|x1|y1|body1|turret1|x2|y2|body2|turret2
         if (parts.length != 13) {
             System.err.println("[StatePacketHandler] Invalid STATE packet");
@@ -54,6 +55,7 @@ public final class StatePacketHandler {
             }
 
             boolean amPlayer1 = client.getMyNumber() == 1;
+            // cập nhật giao diện
             Platform.runLater(() -> applyState(
                     client, amPlayer1,
                     x1, y1, body1, turret1,
@@ -89,7 +91,8 @@ public final class StatePacketHandler {
     }
 
     private static void applyLocalState(Tank tank, double x, double y, double bodyAngle, double turretAngle) {
-        // BÆ°á»›c reconciliation sau sáº½ thay setPosition bÃ ng viá»‡c replay INPUT chÆ°a ACK.
+        // Bước reconciliation sau sẽ thay setPosition
+        // bằng việc replay INPUT chưa ACK.
         tank.setPosition(x, y);
         tank.setAngle(bodyAngle);
         tank.setTurretAngle(turretAngle);

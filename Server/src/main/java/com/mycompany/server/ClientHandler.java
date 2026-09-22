@@ -185,12 +185,15 @@ public final class ClientHandler {
         }
 
         GameRoom room = Server.gameEngine.getRoom(roomId);
-        if (room == null || !room.containsPlayer(playerId)) {
+        if (room == null || (!playerId.equals(room.getPlayer1Id())
+                && !playerId.equals(room.getPlayer2Id()))) {
             return;
         }
 
         udpClients.put(playerId, sender);
-        String opponentId = room.getOpponentId(playerId);
+        String opponentId = playerId.equals(room.getPlayer1Id())
+                ? room.getPlayer2Id()
+                : room.getPlayer1Id();
         SocketAddress target = udpClients.get(opponentId);
         if (target == null) {
             Player opponent = Server.players.get(opponentId);
