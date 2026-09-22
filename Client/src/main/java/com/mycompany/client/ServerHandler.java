@@ -39,8 +39,8 @@ public class ServerHandler {
                     ShootingPacketHandler.handle(parts);
                     break;
 
-                case "MOVE":
-                    MovementPacketHandler.handle(parts);
+                case "STATE":
+                    StatePacketHandler.handle(parts);
                     break;
 
                 case "MATCH_FOUND":

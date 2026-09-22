@@ -7,18 +7,18 @@ public final class GamePacketSender {
     private GamePacketSender() {
     }
 
-    public static void sendMove(Client client, Tank tank) {
-        if (client == null || tank == null) {
+    private static long nextInputSeq;
+
+    public static void sendInput(Client client, Tank tank) {
+        if (client == null || tank == null)
             return;
-        }
 
         String packet = String.format(
-                "MOVE|%s|%s|%.2f|%.2f|%.2f|%.2f",
+                "INPUT|%s|%s|%d|%d|%.2f",
                 client.getGameRoomId(),
-                tank.getIdPlayer(),
-                tank.getX(),
-                tank.getY(),
-                tank.getAngle(),
+                client.getPlayerId(),
+                nextInputSeq++,
+                tank.getInputMask(),
                 tank.getTurretAngle());
 
         client.sendUdpData(packet);

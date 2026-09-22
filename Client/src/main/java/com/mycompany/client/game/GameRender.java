@@ -10,9 +10,11 @@ import javafx.scene.canvas.GraphicsContext;
 /**
  * Vòng lặp chính của game.
  *
- * <p>Lớp này chỉ điều phối việc cập nhật trạng thái, gửi vị trí lên server
+ * <p>
+ * Lớp này chỉ điều phối việc cập nhật trạng thái, gửi vị trí lên server
  * và yêu cầu renderer vẽ một frame. Logic vẽ chi tiết được tách sang các
- * renderer chuyên trách.</p>
+ * renderer chuyên trách.
+ * </p>
  */
 public class GameRender extends AnimationTimer {
     private static final long POSITION_SEND_INTERVAL_NANOS = 50_000_000L;
@@ -80,7 +82,7 @@ public class GameRender extends AnimationTimer {
 
         // Giới hạn tần suất gửi trạng thái di chuyển còn 20 gói/giây.
         if (localTank != null && now - lastPositionSendNanos >= POSITION_SEND_INTERVAL_NANOS) {
-            GamePacketSender.sendMove(Client.getInstance(), localTank);
+            GamePacketSender.sendInput(Client.getInstance(), localTank);
             lastPositionSendNanos = now;
         }
     }

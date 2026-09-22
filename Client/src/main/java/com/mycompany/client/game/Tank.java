@@ -60,8 +60,10 @@ public class Tank {
         if (remoteControlled) {
             double nextX = x + (targetX - x) * 0.20;
             double nextY = y + (targetY - y) * 0.20;
-            if (canMoveTo(nextX, y)) x = nextX;
-            if (canMoveTo(x, nextY)) y = nextY;
+            if (canMoveTo(nextX, y))
+                x = nextX;
+            if (canMoveTo(x, nextY))
+                y = nextY;
         }
         double dx = 0, dy = 0;
 
@@ -102,7 +104,7 @@ public class Tank {
     }
 
     // private boolean hasMovementInput() {
-    //     return moveUp || moveDown || moveLeft || moveRight;
+    // return moveUp || moveDown || moveLeft || moveRight;
     // }
 
     /**
@@ -126,11 +128,13 @@ public class Tank {
         if (!(isTilePassable(nx + m, ny + m)
                 && isTilePassable(nx + WIDTH - m, ny + m)
                 && isTilePassable(nx + m, ny + HEIGHT - m)
-                && isTilePassable(nx + WIDTH - m, ny + HEIGHT - m))) return false;
+                && isTilePassable(nx + WIDTH - m, ny + HEIGHT - m)))
+            return false;
 
         if (otherTanks != null) {
             for (Tank other : otherTanks) {
-                if (other != null && other != this && rectanglesOverlap(nx, ny, other.x, other.y)) return false;
+                if (other != null && other != this && rectanglesOverlap(nx, ny, other.x, other.y))
+                    return false;
             }
         }
         return true;
@@ -250,5 +254,18 @@ public class Tank {
 
     public String getIdPlayer() {
         return idPlayer;
+    }
+
+    public int getInputMask() {
+        int keys = 0;
+        if (moveUp)
+            keys |= 1;
+        if (moveDown)
+            keys |= 2;
+        if (moveLeft)
+            keys |= 4;
+        if (moveRight)
+            keys |= 8;
+        return keys;
     }
 }
