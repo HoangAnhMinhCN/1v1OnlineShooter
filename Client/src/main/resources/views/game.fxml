@@ -18,8 +18,8 @@
             <ProgressBar focusTraversable="false" layoutX="22.0" layoutY="27.0" prefWidth="200.0" progress="0.0" />
             <ProgressBar focusTraversable="false" layoutX="579.0" layoutY="26.0" prefWidth="200.0" progress="0.0" />
             <Label focusTraversable="false" layoutX="374.0" layoutY="27.0" text="Thời gian:" />
-            <Label focusTraversable="false" layoutX="22.0" layoutY="5.0" text="Player 1" />
-            <Label focusTraversable="false" layoutX="579.0" layoutY="5.0" text="Player 2" />
+            <Label fx:id="namePlayer1" focusTraversable="false" layoutX="22.0" layoutY="5.0" text="Player 1" />
+            <Label fx:id="namePlayer2" focusTraversable="false" layoutX="579.0" layoutY="5.0" text="Player 2" />
             <VBox fx:id="chatArea" layoutX="692.0" layoutY="108.0" prefHeight="200.0" prefWidth="100.0" visible="false">
                <children>
                   <ListView fx:id="messageArea" focusTraversable="false" prefHeight="200.0" prefWidth="200.0" />

@@ -66,7 +66,7 @@ public final class ClientHandler {
     }
 
     private static void requestMatch(String[] parts) {
-        if (parts.length != 2 || !Server.players.containsKey(parts[1])) {
+        if (parts.length != 3 || !Server.players.containsKey(parts[1])) {
             return;
         }
 
@@ -83,13 +83,15 @@ public final class ClientHandler {
         if (player1Id == null || player2Id == null || player1Id.equals(player2Id)) {
             return;
         }
+        Player p1 = Server.players.get(player1Id);
+        Player p2 = Server.players.get(player2Id);
 
         GameRoom room = new GameRoom(player1Id, player2Id);
         Server.gameEngine.createMatch(room);
 
-        sendTcpResponse("MATCH_FOUND|" + player2Id + "|" + room.getRoomId() + "|1",
+        sendTcpResponse("MATCH_FOUND|" + player2Id + "|" + room.getRoomId() + "|1" + "|" + p2.getPlayerName(),
                 Server.players.get(player1Id).getTcpChannel());
-        sendTcpResponse("MATCH_FOUND|" + player1Id + "|" + room.getRoomId() + "|2",
+        sendTcpResponse("MATCH_FOUND|" + player1Id + "|" + room.getRoomId() + "|2" + "|" + p1.getPlayerName(),
                 Server.players.get(player2Id).getTcpChannel());
     }
 
@@ -224,8 +226,9 @@ public final class ClientHandler {
                 }
 
                 String playerId = resultSet.getString("id");
-                Server.players.put(playerId, new Player((SocketChannel) clientChannel, playerId));
-                sendTcpResponse("LOGIN_SUCCESS|" + playerId, clientChannel);
+                String name = resultSet.getString("name");
+                Server.players.put(playerId, new Player((SocketChannel) clientChannel, playerId, name));
+                sendTcpResponse("LOGIN_SUCCESS|" + playerId + "|" + name, clientChannel);
             }
         } catch (SQLException e) {
             System.err.println("[Server] Login query failed: " + e.getMessage());

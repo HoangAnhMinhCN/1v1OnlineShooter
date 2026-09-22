@@ -8,6 +8,7 @@ import com.mycompany.client.game.Tank;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
@@ -24,6 +25,10 @@ public class GameController {
     private ListView<String> messageArea;
     @FXML
     private TextField inputMessage;
+    @FXML
+    private Label namePlayer1;
+    @FXML
+    private Label namePlayer2;
 
     private Client client;
 
@@ -51,6 +56,18 @@ public class GameController {
         });
     }
 
+    public void initPlayerNames(String nameP1, String nameP2) {
+        if (Client.getInstance().getMyNumber() == 1) {
+            namePlayer1.setText(nameP1);
+            namePlayer1.setStyle("-fx-font-weight: bold;");
+            namePlayer2.setText(nameP2);
+        } else {
+            namePlayer2.setText(nameP1);
+            namePlayer2.setStyle("-fx-font-weight: bold;");
+            namePlayer1.setText(nameP2);
+        }
+    }
+
     public void onShootPressed() {
         // 1. Lấy GameScene hiện tại
         GameScene gameScene = SceneController.getInstance().getCurrentGameScene();
@@ -59,20 +76,12 @@ public class GameController {
             // Tạo đạn cục bộ ngay lập tức cho mượt
             gameScene.spawnBullet(gameScene.getLocalTank());
 
-            // 2. Gửi gói tin thông báo bắn lên Server (nếu đánh Online)
+            // 2. Gửi gói tin thông báo bắn lên Server
             if (client != null) {
                 // Lấy tank đang được người chơi điều khiển.
                 Tank tank = gameScene.getLocalTank();
                 GamePacketSender.sendShoot(client, tank);
             }
         }
-    }
-
-    public void onInputChanged(boolean moveUp, boolean moveDown, boolean moveLeft, boolean moveRight) {
-
-    }
-
-    public void onTurretAngleChanged(double turretAngle) {
-
     }
 }

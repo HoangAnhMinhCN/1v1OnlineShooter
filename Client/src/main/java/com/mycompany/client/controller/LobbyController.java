@@ -6,25 +6,11 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.stage.Stage;
+import javafx.scene.control.Label;
 
 public class LobbyController {
     @FXML private Button matchBtn;
-
-    private Client client;
-    private Stage primaryStage;
-
-    public void setClient(Client client) {
-        this.client = client;
-    }
-
-    public void setPrimaryStage(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-    }
-
-    public LobbyController(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-    }
+    @FXML private Label lbPlayerName;
 
     public LobbyController() {
     }
@@ -33,7 +19,11 @@ public class LobbyController {
     public void handleMatch() {
         //SceneController.getInstance().showGameUI();
         System.out.println("[LobbyController] Gửi yêu cầu match đến server.");
-        Client.sendTcpMessage("MATCH_REQUEST|" + Client.getInstance().getPlayerId());
+        Client.sendTcpMessage("MATCH_REQUEST|" + Client.getInstance().getPlayerId() + "|" + Client.getInstance().getPlayerName());
+    }
+
+    public void initNamePlayer(Client client) {
+        lbPlayerName.setText(lbPlayerName.getText() + " " + client.getPlayerName());
     }
 
     public void showErrorAlert(String message) {

@@ -1,6 +1,5 @@
 package com.mycompany.client;
 
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
@@ -17,7 +16,8 @@ public class Client {
     private static final int SERVER_PORT = 12345;
 
     private static Client instance;
-    private static String playerId;
+    private String playerId;
+    private String playerName;
     private String gameRoomId;
     private String anotherPlayerId;
     private static SocketChannel tcpChannel;
@@ -36,12 +36,20 @@ public class Client {
         return instance;
     }
 
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
+    }
+
     public String getPlayerId() {
         return playerId;
     }
 
-    public static void setPlayerId(String playerId) {
-        Client.playerId = playerId;
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 
     public void setGameRoomId(String gameRoomId) {
@@ -149,7 +157,7 @@ public class Client {
                     }
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -159,7 +167,7 @@ public class Client {
         try {
             ByteBuffer buffer = ByteBuffer.wrap((message + "\n").getBytes());
             tcpChannel.write(buffer);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -170,7 +178,7 @@ public class Client {
             ByteBuffer buffer = ByteBuffer.wrap(data.getBytes());
             SocketAddress target = new InetSocketAddress(SERVER_HOST, SERVER_PORT);
             udpChannel.send(buffer, target);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -183,7 +191,6 @@ public class Client {
 
     private void notifyFailure(String message) {
         if (callback != null) {
-            // Bắt buộc dùng Platform.runLater vì UI chỉ được cập nhật trên JavaFX
             // Application Thread
             Platform.runLater(() -> callback.onConnectFailure(message));
         }
@@ -197,7 +204,8 @@ public class Client {
                 udpChannel.close();
             if (selector != null)
                 selector.close();
-        } catch (IOException ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
