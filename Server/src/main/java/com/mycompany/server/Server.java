@@ -10,7 +10,7 @@ import java.util.*;
 import com.mycompany.server.game.GameEngine;
 
 public class Server {
-    private static final String SERVER_HOST = "26.142.23.65";
+    private static final String SERVER_HOST = "localhost";
     private static final int PORT = 12345;
     private Selector selector;
     private ServerSocketChannel tcpServerChannel;
@@ -19,7 +19,7 @@ public class Server {
     private Set<SocketChannel> tcpClients = new HashSet<>();
     public static ConcurrentHashMap<String, Player> players = new ConcurrentHashMap<>();
     public static ArrayDeque<String> matchMakingQueue = new ArrayDeque<>();
-    public static final GameEngine gameEngine = new GameEngine();
+    static final GameEngine gameEngine = new GameEngine();
     private static final long TICK_NANOS = 16_666_667L; // 60 tick/s
     private static final int STATE_SEND_INTERVAL_TICKS = 3; // 20 STATE/s
     private long nextTickNanos = System.nanoTime();
@@ -61,6 +61,8 @@ public class Server {
             long now = System.nanoTime();
             while (now >= nextTickNanos) {
                 gameEngine.tick();
+                ClientHandler.broadcastDestroyedBullets(
+                        udpServerChannel, gameEngine.drainDestroyedBullets());
                 if (gameEngine.getServerTick() % STATE_SEND_INTERVAL_TICKS == 0) {
                     ClientHandler.broadcastStates(udpServerChannel);
                 }
@@ -132,7 +134,7 @@ public class Server {
                                 byte[] data = new byte[buffer.remaining()];
                                 buffer.get(data);
                                 String msg = new String(data).trim();
-                                System.out.println("[UDP Received] Từ " + clientAddress + ": " + msg);
+                                //System.out.println("[UDP Received] Từ " + clientAddress + ": " + msg);
                                 // Xử lý tin nhắn nhận được
                                 // Truyền địa chỉ người gửi để server có thể gửi trạng thái về đúng client.
                                 ClientHandler.handleClientPacket(msg, datagramChannel, clientAddress);

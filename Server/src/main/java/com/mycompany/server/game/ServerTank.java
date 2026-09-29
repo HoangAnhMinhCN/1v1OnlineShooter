@@ -1,6 +1,7 @@
 package com.mycompany.server.game;
 
 public final class ServerTank {
+    private int hp = 100;
     public static final double WIDTH = 36; // px
     public static final double HEIGHT = 36; // px
     public static final double SPEED_PER_TICK = 1.0; // px/frame (~150 px/s ở 60 FPS)
@@ -77,6 +78,49 @@ public final class ServerTank {
         }
 
         return GameMap.MAP_DATA[row][col] != 1;
+    }
+
+    public boolean intersectsBullet(double bx, double by, double bradius) {
+        // 1. Tính tọa độ TÂM của xe tăng
+        double centerX = this.x + WIDTH / 2.0;
+        double centerY = this.y + HEIGHT / 2.0;
+
+        // 2. Chuyển tâm đạn về hệ tọa độ có gốc là Tâm xe
+        double relX = bx - centerX;
+        double relY = by - centerY;
+
+        // 3. Xoay ngược vị trí đạn theo góc bodyAngle (đổi từ deg sang rad)
+        double rad = Math.toRadians(-this.bodyAngle);
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
+
+        // Tọa độ đạn sau khi xoay về hệ tọa độ riêng của Xe
+        double localBx = relX * cos - relY * sin;
+        double localBy = relX * sin + relY * cos;
+
+        // 4. Kiểm tra va chạm AABB trong hệ tọa độ riêng của Xe
+        double halfW = WIDTH / 2.0;
+        double halfH = HEIGHT / 2.0;
+
+        double closestX = Math.max(-halfW, Math.min(localBx, halfW));
+        double closestY = Math.max(-halfH, Math.min(localBy, halfH));
+
+        double distX = localBx - closestX;
+        double distY = localBy - closestY;
+
+        return (distX * distX + distY * distY) <= (bradius * bradius);
+    }
+
+    public void takeDamage(int damage) {
+        this.hp = Math.max(0, this.hp - damage);
+    }
+
+    public boolean isDead() {
+        return this.hp <= 0;
+    }
+
+    public int getHp() {
+        return hp;
     }
 
     public String getPlayerId() {

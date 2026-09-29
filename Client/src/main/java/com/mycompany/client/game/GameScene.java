@@ -1,7 +1,9 @@
 package com.mycompany.client.game;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.mycompany.client.Client;
@@ -31,7 +33,9 @@ public class GameScene {
     private Tank localTank;
     private InputHandler inputHandler;
     private GameController gameController;
-    private final List<Bullet> bullets = new CopyOnWriteArrayList<>();
+    private List<Bullet> bullets = new CopyOnWriteArrayList<>();
+    private final Set<String> destroyedBulletIds = new HashSet<>();
+    private Canvas canvas;
 
     private List<Tank> tanks;
 
@@ -42,7 +46,7 @@ public class GameScene {
         this.scene = new Scene(root);
         this.gameController = gameController;
 
-        Canvas canvas = (Canvas) root.lookup("#gameCanvas");
+        canvas = (Canvas) root.lookup("#gameCanvas");
 
         if (canvas != null) {
             this.gameRender = new GameRender(canvas.getGraphicsContext2D());
@@ -101,23 +105,31 @@ public class GameScene {
 
     // ── Bullet ────────────────────────────────────────────────────────────────
 
-    public void spawnBullet(Tank shooter) {
-        if (shooter == null)
-            return;
-
+    public String spawnBullet(Tank shooter) {
         // Tọa độ nòng pháo / tâm xe
         double startX = shooter.getCenterX();
         double startY = shooter.getCenterY();
         double angle = shooter.getTurretAngle();
 
         // Tạo đối tượng đạn mới và thêm vào list
-        Bullet newBullet = new Bullet(startX, startY, angle, shooter.getIdPlayer());
-        bullets.add(newBullet);
+        String bulletId = Client.getInstance().getPlayerId() + "_" + System.currentTimeMillis();
+        if (!destroyedBulletIds.contains(bulletId)) {
+            Bullet newBullet = new Bullet(bulletId, startX, startY, angle, shooter.getIdPlayer());
+            bullets.add(newBullet);
+        }
+        return bulletId;
     }
 
-    public void spawnBullet(double x, double y, double angle, String playerId) {
+    public void spawnBullet(String bulletId, double x, double y, double angle, String playerId) {
         // Tạo viên đạn từ dữ liệu nhận được qua UDP.
-        bullets.add(new Bullet(x, y, angle, playerId));
+        if (!destroyedBulletIds.contains(bulletId)) {
+            bullets.add(new Bullet(bulletId, x, y, angle, playerId));
+        }
+    }
+
+    public void removeDestroyedBullets(List<String> destroyedBulletIds) {
+        this.destroyedBulletIds.addAll(destroyedBulletIds);
+        bullets.removeIf(bullet -> bullet != null && this.destroyedBulletIds.contains(bullet.getId()));
     }
 
     // ── Vòng lặp game ─────────────────────────────────────────────────────────
@@ -147,10 +159,11 @@ public class GameScene {
      * ServerHandler gọi để cập nhật vị trí tank địch khi nhận gói MOVE từ server.
      */
     // public Tank getEnemyTank(String myPlayerId) {
-    //     return tanks.stream()
-    //             .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của mình
-    //             .findFirst() // lấy phần tử đầu tiên tìm được
-    //             .orElse(null); // trả null nếu không tìm thấy
+    // return tanks.stream()
+    // .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của
+    // mình
+    // .findFirst() // lấy phần tử đầu tiên tìm được
+    // .orElse(null); // trả null nếu không tìm thấy
     // }
 
     public Tank getTank(String playerId) {

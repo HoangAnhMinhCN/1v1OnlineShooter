@@ -12,7 +12,7 @@ import java.util.Iterator;
 import javafx.application.Platform;
 
 public class Client {
-    private static final String SERVER_HOST = "26.142.23.65";
+    private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 12345;
 
     private static Client instance;
@@ -106,7 +106,7 @@ public class Client {
 
     private void eventLoop() {
         try {
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            ByteBuffer buffer = ByteBuffer.allocate(65507);
 
             while (true) {
                 selector.select();
@@ -151,7 +151,7 @@ public class Client {
                             udpChannel.receive(buffer);
                             buffer.flip();
                             String message = new String(buffer.array(), 0, buffer.limit()).trim();
-                            System.out.println("[UDP Server response]: " + message);
+                            //System.out.println("[UDP Server response]: " + message);
                             ServerHandler.handleServerPacket(message, key.channel());
                         }
                     }

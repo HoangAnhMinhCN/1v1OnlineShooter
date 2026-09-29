@@ -74,13 +74,13 @@ public class GameController {
 
         if (gameScene != null) {
             // Tạo đạn cục bộ ngay lập tức cho mượt
-            gameScene.spawnBullet(gameScene.getLocalTank());
+            String bulletId = gameScene.spawnBullet(gameScene.getLocalTank());
 
             // 2. Gửi gói tin thông báo bắn lên Server
             if (client != null) {
                 // Lấy tank đang được người chơi điều khiển.
                 Tank tank = gameScene.getLocalTank();
-                GamePacketSender.sendShoot(client, tank);
+                GamePacketSender.sendShoot(client, tank, bulletId);
             }
         }
     }

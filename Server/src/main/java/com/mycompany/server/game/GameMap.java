@@ -26,4 +26,11 @@ public class GameMap {
             { 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1 },
             { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 }
     };
+
+    public static boolean isSolid(int row, int col) {
+        if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
+            return true; // Coi các mép ngoài bản đồ là tường
+        }
+        return MAP_DATA[row][col] == 1; // 1 là vật cản
+    }
 }

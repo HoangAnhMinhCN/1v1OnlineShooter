@@ -1,6 +1,8 @@
 package com.mycompany.server;
 
+import com.mycompany.server.game.ServerBullet;
 import com.mycompany.server.game.ServerTank;
+import com.mycompany.server.game.GameEngine;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
@@ -11,6 +13,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -50,6 +55,7 @@ public final class ClientHandler {
             }
         } catch (Exception e) {
             System.err.println("[Server] Could not process packet: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -122,7 +128,24 @@ public final class ClientHandler {
         }
     }
 
-    /** Builds one authoritative snapshot for the two players in a room. */
+    // /** Builds one authoritative snapshot for the two players in a room. */
+    // public static String buildState(GameRoom room) {
+    // ServerTank p1 = Server.gameEngine.getTank(room.getPlayer1Id());
+    // ServerTank p2 = Server.gameEngine.getTank(room.getPlayer2Id());
+    // if (p1 == null || p2 == null) {
+    // return null;
+    // }
+
+    // return String.format(
+    // "STATE|%s|%d|%d|%d|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f",
+    // room.getRoomId(),
+    // Server.gameEngine.getServerTick(),
+    // p1.getLastInputSeq(),
+    // p2.getLastInputSeq(),
+    // p1.getX(), p1.getY(), p1.getBodyAngle(), p1.getTurretAngle(),
+    // p2.getX(), p2.getY(), p2.getBodyAngle(), p2.getTurretAngle());
+    // }
+
     public static String buildState(GameRoom room) {
         ServerTank p1 = Server.gameEngine.getTank(room.getPlayer1Id());
         ServerTank p2 = Server.gameEngine.getTank(room.getPlayer2Id());
@@ -130,14 +153,31 @@ public final class ClientHandler {
             return null;
         }
 
-        return String.format(
-                "STATE|%s|%d|%d|%d|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f|%.2f",
-                room.getRoomId(),
-                Server.gameEngine.getServerTick(),
-                p1.getLastInputSeq(),
-                p2.getLastInputSeq(),
-                p1.getX(), p1.getY(), p1.getBodyAngle(), p1.getTurretAngle(),
-                p2.getX(), p2.getY(), p2.getBodyAngle(), p2.getTurretAngle());
+        StringBuilder sb = new StringBuilder();
+        sb.append("STATE|").append(room.getRoomId())
+                .append("|").append(Server.gameEngine.getServerTick())
+                .append("|").append(p1.getLastInputSeq())
+                .append("|").append(p2.getLastInputSeq())
+                // Trạng thái Tank 1
+                .append("|").append(String.format(Locale.ROOT, "%.2f|%.2f|%.2f|%.2f|%d",
+                        p1.getX(), p1.getY(), p1.getBodyAngle(), p1.getTurretAngle(), p1.getHp()))
+                // Trạng thái Tank 2
+                .append("|").append(String.format(Locale.ROOT, "%.2f|%.2f|%.2f|%.2f|%d",
+                        p2.getX(), p2.getY(), p2.getBodyAngle(), p2.getTurretAngle(), p2.getHp()));
+
+        // Lấy danh sách đạn KHÔNG CÒN ACTIVE trong phòng
+        List<ServerBullet> bullets = Server.gameEngine.getBullets(room.getRoomId());
+        List<String> destroyedBulletIds = new ArrayList<>();
+        for (ServerBullet b : bullets) {
+            if (!b.isAlive())
+                destroyedBulletIds.add(b.getId());
+        }
+        sb.append("|").append(destroyedBulletIds.size());
+        for (String bulletId : destroyedBulletIds) {
+            sb.append("|").append(bulletId);
+        }
+
+        return sb.toString();
     }
 
     /** Sends authoritative snapshots to both players of every active room. */
@@ -149,6 +189,21 @@ public final class ClientHandler {
             }
             sendUdpState(channel, state, room.getPlayer1Id());
             sendUdpState(channel, state, room.getPlayer2Id());
+        }
+    }
+
+    static void broadcastDestroyedBullets(
+            DatagramChannel channel, List<GameEngine.DestroyedBullet> destroyedBullets) {
+        for (GameEngine.DestroyedBullet destroyedBullet : destroyedBullets) {
+            GameRoom room = Server.gameEngine.getRoom(destroyedBullet.roomId());
+            if (room == null) {
+                continue;
+            }
+
+            String packet = "BULLET_DESTROYED|" + destroyedBullet.roomId()
+                    + "|" + destroyedBullet.bulletId();
+            sendUdpState(channel, packet, room.getPlayer1Id());
+            sendUdpState(channel, packet, room.getPlayer2Id());
         }
     }
 
@@ -169,21 +224,27 @@ public final class ClientHandler {
         }
     }
 
-    /** Legacy shoot relay; authoritative bullet simulation is the next migration step. */
+    /**
+     * Legacy shoot relay; authoritative bullet simulation is the next migration
+     * step.
+     */
     private static void handleShoot(String[] parts, DatagramChannel channel, SocketAddress sender) throws Exception {
-        // SHOOT|roomId|playerId|x|y|turretAngle
-        if (parts.length != 6) {
+        // SHOOT|roomId|playerId|bulletId|x|y|turretAngle
+        if (parts.length != 7) {
             return;
         }
 
         String roomId = parts[1];
         String playerId = parts[2];
-        double x = Double.parseDouble(parts[3]);
-        double y = Double.parseDouble(parts[4]);
-        double angle = Double.parseDouble(parts[5]);
+        String bulletId = parts[3];
+        double x = Double.parseDouble(parts[4]);
+        double y = Double.parseDouble(parts[5]);
+        double angle = Double.parseDouble(parts[6]);
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(angle)) {
             return;
         }
+
+        Server.gameEngine.spawnBullet(roomId, bulletId, playerId, x, y, angle);
 
         GameRoom room = Server.gameEngine.getRoom(roomId);
         if (room == null || (!playerId.equals(room.getPlayer1Id())
@@ -204,8 +265,9 @@ public final class ClientHandler {
             return;
         }
 
-        String response = String.format("SHOOT|%s|%.2f|%.2f|%.2f", playerId, x, y, angle);
-        channel.send(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)), target);
+        String response = String.format("SHOOT|%s|%s|%.2f|%.2f|%.2f", bulletId, playerId, x, y, angle);
+        channel.send(ByteBuffer.wrap(response.getBytes(StandardCharsets.UTF_8)),
+                target);
     }
 
     private static void login(String[] parts, Channel clientChannel) {
