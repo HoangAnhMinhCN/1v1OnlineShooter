@@ -53,54 +53,105 @@ public class Tank {
     // ── Cập nhật trạng thái mỗi frame ────────────────────────────────────────
 
     /**
-     * Cập nhật vị trí và hướng xe tăng, kiểm tra collision với tile map.
+     * Cập nhật vị trí và hướng xe tăng mỗi frame (gọi bởi AnimationTimer).
+     *
+     * <p>Với tank đối thủ (remoteControlled = true): nội suy mượt về targetX/targetY
+     * là vị trí server gửi về, tránh teleport giật.</p>
+     *
+     * <p>Với tank cục bộ (remoteControlled = false): áp dụng input hiện tại của
+     * người chơi (prediction). Vị trí này sẽ bị reconcile khi server gửi STATE.</p>
      */
     public void update() {
-        // Tank đối thủ được kéo mượt về vị trí mới nhận từ server.
         if (remoteControlled) {
+            // ── Tank đối thủ ──────────────────────────────────────────────────
+            // Lerp (Linear Interpolation) mượt về vị trí server gửi về.
+            // Hệ số 0.20 = mỗi frame tiến 20% khoảng cách còn lại → cảm giác
+            // "trượt" tự nhiên, không teleport đột ngột.
             double nextX = x + (targetX - x) * 0.20;
             double nextY = y + (targetY - y) * 0.20;
             if (canMoveTo(nextX, y))
                 x = nextX;
             if (canMoveTo(x, nextY))
                 y = nextY;
+        } else {
+            // ── Tank cục bộ: Client-Side Prediction ───────────────────────────
+            // Áp dụng input hiện tại ngay lập tức, không chờ server.
+            // Kết quả này có thể bị "sửa" bởi reconciliation khi STATE về.
+            applyMovement(moveUp, moveDown, moveLeft, moveRight);
         }
+
+        // Cập nhật hiệu ứng bụi rậm (visual only, không ảnh hưởng vị trí)
+        updateBushState();
+        double targetOpacity = inBush ? BUSH_OPACITY : 1.0;
+        opacity += (targetOpacity - opacity) * OPACITY_LERP;
+    }
+
+    /**
+     * Replay một input frame trong quá trình reconciliation.
+     *
+     * <p><b>Reconciliation flow:</b></p>
+     * <ol>
+     *   <li>StatePacketHandler nhận STATE từ server với vị trí authoritative.</li>
+     *   <li>Tank được đặt về vị trí đó (setPosition).</li>
+     *   <li>Với mỗi input chưa ACK (seq > ackedSeq), phương thức này được gọi
+     *       để tính lại vị trí, giúp bù lại độ trễ mạng.</li>
+     * </ol>
+     *
+     * <p><b>Tại sao không dùng update() trực tiếp?</b><br>
+     * update() có thêm logic lerp cho remote tank, bush state, opacity... không
+     * cần thiết trong replay. simulateInputStep() chỉ tính vật lý thuần túy,
+     * khớp với cách ServerTank.simulateTick() hoạt động.</p>
+     *
+     * <p><b>Không kiểm tra va chạm tank-tank</b> khi replay để khớp với server
+     * (ServerTank.canMoveTo() cũng không kiểm tra va chạm với tank khác).</p>
+     *
+     * @param keys bitmask phím: bit0=W, bit1=S, bit2=A, bit3=D
+     */
+    public void simulateInputStep(int keys) {
+        boolean up    = (keys & 1) != 0;
+        boolean down  = (keys & 2) != 0;
+        boolean left  = (keys & 4) != 0;
+        boolean right = (keys & 8) != 0;
+        // Replay không update bush/opacity để tránh flicker visual
+        applyMovement(up, down, left, right);
+    }
+
+    /**
+     * Logic di chuyển dùng chung cho cả update() và simulateInputStep().
+     * Tách ra để tránh lặp code và đảm bảo client/server tính toán giống nhau.
+     *
+     * @param up    có đang nhấn W/↑ không
+     * @param down  có đang nhấn S/↓ không
+     * @param left  có đang nhấn A/← không
+     * @param right có đang nhấn D/→ không
+     */
+    private void applyMovement(boolean up, boolean down, boolean left, boolean right) {
         double dx = 0, dy = 0;
 
-        if (moveUp)
-            dy -= SPEED;
-        if (moveDown)
-            dy += SPEED;
-        if (moveLeft)
-            dx -= SPEED;
-        if (moveRight)
-            dx += SPEED;
+        if (up)    dy -= SPEED;
+        if (down)  dy += SPEED;
+        if (left)  dx -= SPEED;
+        if (right) dx += SPEED;
 
-        // Di chuyển chéo: chuẩn hóa vector để tốc độ không tăng gấp đôi
+        // Chuẩn hóa vector chéo: di chuyển chéo không nhanh hơn di chuyển thẳng.
+        // Không chuẩn hóa → tốc độ chéo = SPEED * √2 ≈ 1.41x tốc độ thẳng.
         if (dx != 0 && dy != 0) {
-            double norm = Math.sqrt(2);
-            dx /= norm;
-            dy /= norm;
+            dx /= Math.sqrt(2);
+            dy /= Math.sqrt(2);
         }
 
-        // Xoay thân xe theo hướng đang đi
+        // Xoay thân xe theo hướng vector di chuyển.
+        // atan2(dx, -dy): góc 0° = hướng lên (trục Y âm trong canvas).
         if (dx != 0 || dy != 0) {
-            // atan2(dx, -dy): 0° = lên, 90° = phải, -90° = trái, 180° = xuống
             angleTank = Math.toDegrees(Math.atan2(dx, -dy));
         }
 
-        // Sliding collision: thử X riêng, rồi Y riêng
+        // Sliding collision: thử X và Y độc lập để xe "trượt" dọc tường.
+        // Nếu kiểm tra cùng lúc cả X+Y thì va tường chéo sẽ bị kẹt hoàn toàn.
         if (dx != 0 && canMoveTo(x + dx, y))
             x += dx;
         if (dy != 0 && canMoveTo(x, y + dy))
             y += dy;
-
-        // Kiểm tra tile tâm xe — bụi rậm = tile type 0
-        updateBushState();
-
-        // Smooth lerp opacity về mục tiêu
-        double targetOpacity = inBush ? BUSH_OPACITY : 1.0;
-        opacity += (targetOpacity - opacity) * OPACITY_LERP;
     }
 
     // private boolean hasMovementInput() {
