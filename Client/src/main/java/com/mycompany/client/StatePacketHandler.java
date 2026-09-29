@@ -1,5 +1,8 @@
 package com.mycompany.client;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.mycompany.client.game.GameScene;
 import com.mycompany.client.game.Tank;
 import javafx.application.Platform;
@@ -13,9 +16,9 @@ public final class StatePacketHandler {
     }
 
     public static void handle(String[] parts) {
-        // ack server đã chấp nhận iput có thứ rự ack
-        // STATE|roomId|tick|ack1|ack2|x1|y1|body1|turret1|x2|y2|body2|turret2
-        if (parts.length != 13) {
+        // ack server đã chấp nhận iput có thứ tự ack
+        // STATE|roomId|tick|ack1|ack2|x1|y1|body1|turret1|hp1|x2|y2|body2|turret2|hp2
+        if (parts.length < 15) {
             System.err.println("[StatePacketHandler] Invalid STATE packet");
             return;
         }
@@ -34,16 +37,29 @@ public final class StatePacketHandler {
             double y1 = Double.parseDouble(parts[6]);
             double body1 = Double.parseDouble(parts[7]);
             double turret1 = Double.parseDouble(parts[8]);
-            double x2 = Double.parseDouble(parts[9]);
-            double y2 = Double.parseDouble(parts[10]);
-            double body2 = Double.parseDouble(parts[11]);
-            double turret2 = Double.parseDouble(parts[12]);
+            int hp1 = Integer.parseInt(parts[9]);
+            double x2 = Double.parseDouble(parts[10]);
+            double y2 = Double.parseDouble(parts[11]);
+            double body2 = Double.parseDouble(parts[12]);
+            double turret2 = Double.parseDouble(parts[13]);
+            int hp2 = Integer.parseInt(parts[14]);
 
             if (serverTick < 0 || !Double.isFinite(x1) || !Double.isFinite(y1)
                     || !Double.isFinite(body1) || !Double.isFinite(turret1)
                     || !Double.isFinite(x2) || !Double.isFinite(y2)
                     || !Double.isFinite(body2) || !Double.isFinite(turret2)) {
                 return;
+            }
+
+            // Parse danh sách ID đạn ĐÃ BỊ HỦY (không còn active)
+            List<String> destroyedBulletIds = new ArrayList<>();
+            if (parts.length > 15) {
+                int destroyedCount = Integer.parseInt(parts[15]);
+                if (parts.length >= 16 + destroyedCount) {
+                    for (int i = 0; i < destroyedCount; i++) {
+                        destroyedBulletIds.add(parts[16 + i]);
+                    }
+                }
             }
 
             synchronized (StatePacketHandler.class) {
@@ -58,8 +74,8 @@ public final class StatePacketHandler {
             // cập nhật giao diện
             Platform.runLater(() -> applyState(
                     client, amPlayer1,
-                    x1, y1, body1, turret1,
-                    x2, y2, body2, turret2));
+                    x1, y1, body1, turret1, hp1,
+                    x2, y2, body2, turret2, hp2, destroyedBulletIds));
         } catch (NumberFormatException ignored) {
             System.err.println("[StatePacketHandler] Invalid STATE values");
         }
@@ -67,8 +83,9 @@ public final class StatePacketHandler {
 
     private static void applyState(
             Client client, boolean amPlayer1,
-            double x1, double y1, double body1, double turret1,
-            double x2, double y2, double body2, double turret2) {
+            double x1, double y1, double body1, double turret1, int hp1,
+            double x2, double y2, double body2, double turret2, int hp2,
+            List<String> destroyedBulletIds) {
 
         GameScene scene = GameScene.getInstance();
         if (scene == null) {
@@ -82,26 +99,32 @@ public final class StatePacketHandler {
         }
 
         if (amPlayer1) {
-            applyLocalState(localTank, x1, y1, body1, turret1);
-            applyRemoteState(enemyTank, x2, y2, body2, turret2);
+            applyLocalState(localTank, x1, y1, body1, turret1, hp1);
+            applyRemoteState(enemyTank, x2, y2, body2, turret2, hp2);
         } else {
-            applyLocalState(localTank, x2, y2, body2, turret2);
-            applyRemoteState(enemyTank, x1, y1, body1, turret1);
+            applyLocalState(localTank, x2, y2, body2, turret2, hp2);
+            applyRemoteState(enemyTank, x1, y1, body1, turret1, hp1);
+        }
+
+        if (!destroyedBulletIds.isEmpty()) {
+            scene.removeDestroyedBullets(destroyedBulletIds);
         }
     }
 
-    private static void applyLocalState(Tank tank, double x, double y, double bodyAngle, double turretAngle) {
+    private static void applyLocalState(Tank tank, double x, double y, double bodyAngle, double turretAngle, int hp) {
         // Bước reconciliation sau sẽ thay setPosition
         // bằng việc replay INPUT chưa ACK.
         tank.setPosition(x, y);
         tank.setAngle(bodyAngle);
         tank.setTurretAngle(turretAngle);
+        tank.setHp(hp);
     }
 
-    private static void applyRemoteState(Tank tank, double x, double y, double bodyAngle, double turretAngle) {
+    private static void applyRemoteState(Tank tank, double x, double y, double bodyAngle, double turretAngle, int hp) {
         tank.setTargetPosition(x, y);
         tank.setAngle(bodyAngle);
         tank.setTurretAngle(turretAngle);
+        tank.setHp(hp);
     }
 
     public static synchronized long getLastAcknowledgedInputSeq() {

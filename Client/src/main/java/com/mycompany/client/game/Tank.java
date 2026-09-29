@@ -20,6 +20,7 @@ public class Tank {
     private static final double OPACITY_LERP = 0.08;
 
     // ── Trạng thái ───────────────────────────────────────────────────────────
+    private int hp;
     private double x, y; // vị trí góc trên-trái (pixel)
     // Vị trí server mới gửi về, dùng làm đích nội suy cho tank đối thủ.
     private double targetX, targetY;
@@ -267,5 +268,13 @@ public class Tank {
         if (moveRight)
             keys |= 8;
         return keys;
+    }
+
+    public int getHp() {
+        return hp;
+    }
+
+    public void setHp(int hp) {
+        this.hp = hp;
     }
 }

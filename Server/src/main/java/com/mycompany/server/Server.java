@@ -132,7 +132,7 @@ public class Server {
                                 byte[] data = new byte[buffer.remaining()];
                                 buffer.get(data);
                                 String msg = new String(data).trim();
-                                System.out.println("[UDP Received] Từ " + clientAddress + ": " + msg);
+                                //System.out.println("[UDP Received] Từ " + clientAddress + ": " + msg);
                                 // Xử lý tin nhắn nhận được
                                 // Truyền địa chỉ người gửi để server có thể gửi trạng thái về đúng client.
                                 ClientHandler.handleClientPacket(msg, datagramChannel, clientAddress);

@@ -151,7 +151,7 @@ public class Client {
                             udpChannel.receive(buffer);
                             buffer.flip();
                             String message = new String(buffer.array(), 0, buffer.limit()).trim();
-                            System.out.println("[UDP Server response]: " + message);
+                            //System.out.println("[UDP Server response]: " + message);
                             ServerHandler.handleServerPacket(message, key.channel());
                         }
                     }

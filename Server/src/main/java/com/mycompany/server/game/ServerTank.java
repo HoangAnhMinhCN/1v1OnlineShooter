@@ -1,6 +1,7 @@
 package com.mycompany.server.game;
 
 public final class ServerTank {
+    private int hp = 100;
     public static final double WIDTH = 36; // px
     public static final double HEIGHT = 36; // px
     public static final double SPEED_PER_TICK = 1.0; // px/frame (~150 px/s ở 60 FPS)
@@ -77,6 +78,36 @@ public final class ServerTank {
         }
 
         return GameMap.MAP_DATA[row][col] != 1;
+    }
+
+    public boolean intersectsBullet(double bx, double by, double bradius) {
+        double halfW = WIDTH / 2.0; // 18.0
+        double halfH = HEIGHT / 2.0; // 18.0
+
+        // Tìm điểm trên Bounding Box của Xe gần tâm viên đạn nhất
+        double closestX = Math.max(this.x - halfW, Math.min(bx, this.x + halfW));
+        double closestY = Math.max(this.y - halfH, Math.min(by, this.y + halfH));
+
+        // Tính bình phương khoảng cách từ điểm đó tới tâm đạn
+        double distX = bx - closestX;
+        double distY = by - closestY;
+        double distanceSquared = (distX * distX) + (distY * distY);
+
+        // Trúng đạn nếu khoảng cách nhỏ hơn hoặc bằng bán kính đạn
+        return distanceSquared <= (bradius * bradius);
+    }
+
+    public void takeDamage(int damage) {
+        this.hp = Math.max(0, this.hp - damage);
+        System.out.println("player id " + playerId + " shoot");
+    }
+
+    public boolean isDead() {
+        return this.hp <= 0;
+    }
+
+    public int getHp() {
+        return hp;
     }
 
     public String getPlayerId() {

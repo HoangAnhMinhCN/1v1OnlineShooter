@@ -24,15 +24,16 @@ public final class GamePacketSender {
         client.sendUdpData(packet);
     }
 
-    public static void sendShoot(Client client, Tank tank) {
+    public static void sendShoot(Client client, Tank tank, String bulletId) {
         if (client == null || tank == null) {
             return;
         }
 
         String packet = String.format(
-                "SHOOT|%s|%s|%.2f|%.2f|%.2f",
+                "SHOOT|%s|%s|%s|%.2f|%.2f|%.2f",
                 client.getGameRoomId(),
                 tank.getIdPlayer(),
+                bulletId,
                 tank.getCenterX(),
                 tank.getCenterY(),
                 tank.getTurretAngle());

@@ -31,7 +31,7 @@ public class GameScene {
     private Tank localTank;
     private InputHandler inputHandler;
     private GameController gameController;
-    private final List<Bullet> bullets = new CopyOnWriteArrayList<>();
+    private List<Bullet> bullets = new CopyOnWriteArrayList<>();
 
     private List<Tank> tanks;
 
@@ -101,23 +101,29 @@ public class GameScene {
 
     // ── Bullet ────────────────────────────────────────────────────────────────
 
-    public void spawnBullet(Tank shooter) {
-        if (shooter == null)
-            return;
-
+    public String spawnBullet(Tank shooter) {
         // Tọa độ nòng pháo / tâm xe
         double startX = shooter.getCenterX();
         double startY = shooter.getCenterY();
         double angle = shooter.getTurretAngle();
 
         // Tạo đối tượng đạn mới và thêm vào list
-        Bullet newBullet = new Bullet(startX, startY, angle, shooter.getIdPlayer());
+        String bulletId = Client.getInstance().getPlayerId() + "_" + System.currentTimeMillis();
+        Bullet newBullet = new Bullet(bulletId, startX, startY, angle, shooter.getIdPlayer());
         bullets.add(newBullet);
+        return bulletId;
     }
 
-    public void spawnBullet(double x, double y, double angle, String playerId) {
+    public void spawnBullet(String bulletId, double x, double y, double angle, String playerId) {
         // Tạo viên đạn từ dữ liệu nhận được qua UDP.
-        bullets.add(new Bullet(x, y, angle, playerId));
+        bullets.add(new Bullet(bulletId, x, y, angle, playerId));
+    }
+
+    public void removeDestroyedBullets(List<String> destroyedBulletIds) {
+        for (Bullet bullet : bullets) {
+            if (destroyedBulletIds.contains(bullet.getId())) bullets.remove(bullet);
+        }
+        System.out.println(bullets);
     }
 
     // ── Vòng lặp game ─────────────────────────────────────────────────────────
@@ -147,10 +153,11 @@ public class GameScene {
      * ServerHandler gọi để cập nhật vị trí tank địch khi nhận gói MOVE từ server.
      */
     // public Tank getEnemyTank(String myPlayerId) {
-    //     return tanks.stream()
-    //             .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của mình
-    //             .findFirst() // lấy phần tử đầu tiên tìm được
-    //             .orElse(null); // trả null nếu không tìm thấy
+    // return tanks.stream()
+    // .filter(t -> t.getIdPlayer() != myPlayerId) // lọc ra tank không phải của
+    // mình
+    // .findFirst() // lấy phần tử đầu tiên tìm được
+    // .orElse(null); // trả null nếu không tìm thấy
     // }
 
     public Tank getTank(String playerId) {
