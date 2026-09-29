@@ -9,8 +9,6 @@ import com.mycompany.client.game.InputRecord;
 import com.mycompany.client.game.Tank;
 import javafx.application.Platform;
 
-import java.util.List;
-
 /**
  * Xử lý gói tin STATE từ server và thực hiện Client-Side Prediction Reconciliation.
  *
@@ -49,6 +47,7 @@ public final class StatePacketHandler {
      * (out-of-order UDP packets — UDP không đảm bảo thứ tự).
      */
     private static long lastReceivedServerTick = -1;
+    private static long lastAcknowledgedInputSeq = -1;
 
     private StatePacketHandler() {
     }
@@ -65,8 +64,7 @@ public final class StatePacketHandler {
      * @param parts mảng string đã split theo '|'
      */
     public static void handle(String[] parts) {
-        // ack server đã chấp nhận iput có thứ rự ack
-        // STATE|roomId|tick|ack1|ack2|x1|y1|body1|turret1|x2|y2|body2|turret2
+        // STATE|roomId|tick|ack1|ack2|x1|y1|body1|turret1|hp1|x2|y2|body2|turret2|hp2|destroyedCount|ids...
         if (parts.length < 15) {
             System.err.println("[StatePacketHandler] Invalid STATE packet");
             return;
@@ -80,24 +78,12 @@ public final class StatePacketHandler {
             }
 
             long serverTick = Long.parseLong(parts[2]);
-
-            // ── Lọc gói tin đến muộn (out-of-order) ────────────────────────────
-            // Nếu tick này cũ hơn tick đã xử lý → bỏ qua để tránh reconcile về
-            // trạng thái cũ hơn trạng thái hiện tại.
-            synchronized (StatePacketHandler.class) {
-                if (serverTick <= lastReceivedServerTick) {
-                    return;
-                }
-                lastReceivedServerTick = serverTick;
-            }
-
-            // ── Parse dữ liệu STATE ─────────────────────────────────────────────
             long ack1 = Long.parseLong(parts[3]);
             long ack2 = Long.parseLong(parts[4]);
 
-            double x1      = Double.parseDouble(parts[5]);
-            double y1      = Double.parseDouble(parts[6]);
-            double body1   = Double.parseDouble(parts[7]);
+            double x1 = Double.parseDouble(parts[5]);
+            double y1 = Double.parseDouble(parts[6]);
+            double body1 = Double.parseDouble(parts[7]);
             double turret1 = Double.parseDouble(parts[8]);
             int hp1 = Integer.parseInt(parts[9]);
             double x2 = Double.parseDouble(parts[10]);
@@ -106,39 +92,47 @@ public final class StatePacketHandler {
             double turret2 = Double.parseDouble(parts[13]);
             int hp2 = Integer.parseInt(parts[14]);
 
-            // Parse danh sách ID đạn ĐÃ BỊ HỦY (không còn active)
+            if (serverTick < 0 || !Double.isFinite(x1) || !Double.isFinite(y1)
+                    || !Double.isFinite(body1) || !Double.isFinite(turret1)
+                    || !Double.isFinite(x2) || !Double.isFinite(y2)
+                    || !Double.isFinite(body2) || !Double.isFinite(turret2)) {
+                return;
+            }
+
             List<String> destroyedBulletIds = new ArrayList<>();
             if (parts.length > 15) {
                 int destroyedCount = Integer.parseInt(parts[15]);
-                if (parts.length >= 16 + destroyedCount) {
+                if (destroyedCount >= 0 && parts.length >= 16 + destroyedCount) {
                     for (int i = 0; i < destroyedCount; i++) {
                         destroyedBulletIds.add(parts[16 + i]);
                     }
                 }
             }
 
-            // Sanity check
             if (serverTick < 0
                     || !Double.isFinite(x1) || !Double.isFinite(y1)
-                    || !Double.isFinite(x2) || !Double.isFinite(y2)) {
+                    || !Double.isFinite(body1) || !Double.isFinite(turret1)
+                    || !Double.isFinite(x2) || !Double.isFinite(y2)
+                    || !Double.isFinite(body2) || !Double.isFinite(turret2)) {
                 return;
             }
 
-            // ACK của mình (player 1 dùng ack1, player 2 dùng ack2)
             boolean amPlayer1 = client.getMyNumber() == 1;
             long myAck = amPlayer1 ? ack1 : ack2;
 
-            // ── Lấy pending inputs TRƯỚC khi vào JavaFX thread ──────────────────
-            // InputBuffer.getUnacknowledged() chỉ iterate (read-only) → an toàn.
-            // discardAcknowledged() sẽ gọi SAU replay trên JavaFX thread.
-            List<InputRecord> pendingInputs = InputBuffer.getUnacknowledged(myAck);
+            synchronized (StatePacketHandler.class) {
+                if (serverTick <= lastReceivedServerTick) {
+                    return;
+                }
+                lastReceivedServerTick = serverTick;
+                lastAcknowledgedInputSeq = myAck;
+            }
 
-            // ── Cập nhật giao diện trên JavaFX Application Thread ───────────────
             Platform.runLater(() -> applyStateWithReconciliation(
                     client, amPlayer1, myAck,
                     x1, y1, body1, turret1, hp1,
                     x2, y2, body2, turret2, hp2,
-                    pendingInputs, destroyedBulletIds));
+                    destroyedBulletIds));
 
         } catch (NumberFormatException e) {
             System.err.println("[StatePacketHandler] Invalid STATE values: " + e.getMessage());
@@ -177,14 +171,22 @@ public final class StatePacketHandler {
             Client client, boolean amPlayer1, long myAck,
             double x1, double y1, double body1, double turret1, int hp1,
             double x2, double y2, double body2, double turret2, int hp2,
-            List<InputRecord> pendingInputs, List<String> destroyedBulletIds) {
+            List<String> destroyedBulletIds) {
 
         GameScene scene = GameScene.getInstance();
-        if (scene == null) return;
+        if (scene == null) {
+            return;
+        }
+
+        if (!destroyedBulletIds.isEmpty()) {
+            scene.removeDestroyedBullets(destroyedBulletIds);
+        }
 
         Tank localTank = scene.getLocalTank();
         Tank enemyTank = scene.getTank(client.getAnotherPlayerId());
-        if (localTank == null || enemyTank == null) return;
+        if (localTank == null || enemyTank == null) {
+            return;
+        }
 
         // ── Phân biệt dữ liệu của mình và đối thủ ──────────────────────────
         double myX, myY, myBody, myTurret;
@@ -211,6 +213,7 @@ public final class StatePacketHandler {
         // để tính vị trí "dự đoán hiện tại" bù vào độ trễ mạng.
         //
         // Kết quả: tank không bị giật về vị trí cũ mỗi khi STATE về.
+        List<InputRecord> pendingInputs = InputBuffer.getUnacknowledged(myAck);
         for (InputRecord input : pendingInputs) {
             localTank.simulateInputStep(input.keys);
         }
@@ -226,6 +229,11 @@ public final class StatePacketHandler {
         enemyTank.setAngle(enemyBody);
         enemyTank.setTurretAngle(enemyTurret);
         enemyTank.setHp(enemyHp);
+
+    }
+
+    public static synchronized long getLastAcknowledgedInputSeq() {
+        return lastAcknowledgedInputSeq;
     }
 }
 
