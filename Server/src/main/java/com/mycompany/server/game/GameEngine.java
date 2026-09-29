@@ -2,18 +2,21 @@ package com.mycompany.server.game;
 
 import com.mycompany.server.GameRoom;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public final class GameEngine {
+    public record DestroyedBullet(String roomId, String bulletId) { }
+
     private final Map<String, ServerTank> tanksByPlayerId = new ConcurrentHashMap<>();
     private final Map<String, GameRoom> roomsById = new ConcurrentHashMap<>();
     private Map<String, List<ServerBullet>> bulletsByRoomId = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<DestroyedBullet> pendingDestroyedBullets = new ConcurrentLinkedQueue<>();
     private long serverTick;
 
     public void createMatch(GameRoom room) {
@@ -79,6 +82,7 @@ public final class GameEngine {
                 // --- A. VA CHẠM ĐẠN - TƯỜNG ---
                 if (isBulletCollidingWithMap(bullet)) {
                     bullet.destroy();
+                    pendingDestroyedBullets.add(new DestroyedBullet(roomId, bullet.getId()));
                     continue;
                 }
 
@@ -88,16 +92,18 @@ public final class GameEngine {
                     if (p1.intersectsBullet(bullet.getX(), bullet.getY(), bullet.getRadius())) {
                         p1.takeDamage(ServerBullet.BULLET_DAMAGE);
                         bullet.destroy();
+                        pendingDestroyedBullets.add(new DestroyedBullet(roomId, bullet.getId()));
                         checkGameOver(room, p1, p2);
                         continue;
                     }
                 }
 
-                // Kiểm tra va chạm với Player 2
+                // // Kiểm tra va chạm với Player 2
                 if (p2 != null && !p2.isDead() && !bullet.getOwnerId().equals(p2.getPlayerId())) {
                     if (p2.intersectsBullet(bullet.getX(), bullet.getY(), bullet.getRadius())) {
                         p2.takeDamage(ServerBullet.BULLET_DAMAGE);
                         bullet.destroy();
+                        pendingDestroyedBullets.add(new DestroyedBullet(roomId, bullet.getId()));
                         checkGameOver(room, p1, p2);
                         continue;
                     }
@@ -105,31 +111,34 @@ public final class GameEngine {
             }
 
             // Xóa các viên đạn đã nổ / biến mất khỏi memory
-            // bullets.removeIf(b -> !b.isAlive());
+            //bullets.removeIf(b -> !b.isAlive());
         }
     }
 
-    // /** Kiểm tra va chạm giữa Xe tank và các Tile tường trên Map */
-    // private boolean isTankCollidingWithMap(ServerTank tank) {
-    // double halfSize = 14.0; // Bán kính va chạm của tank (nhỏ hơn tile một chút
-    // để di chuyển mượt)
+    private boolean isBulletCollidingWithMap(ServerBullet bullet) {
+        double radius = bullet.getRadius();
+        double mapWidth = GameMap.COLS * GameMap.TILE_SIZE;
+        double mapHeight = GameMap.ROWS * GameMap.TILE_SIZE;
+        if (bullet.getX() - radius < 0 || bullet.getY() - radius < 0
+                || bullet.getX() + radius >= mapWidth
+                || bullet.getY() + radius >= mapHeight) {
+            return true;
+        }
 
-    // // Kiểm tra 4 góc của Xe tank
-    // double[] checkX = {tank.getX() - halfSize, tank.getX() + halfSize};
-    // double[] checkY = {tank.getY() - halfSize, tank.getY() + halfSize};
+        int minCol = (int) ((bullet.getX() - radius) / GameMap.TILE_SIZE);
+        int maxCol = (int) ((bullet.getX() + radius) / GameMap.TILE_SIZE);
+        int minRow = (int) ((bullet.getY() - radius) / GameMap.TILE_SIZE);
+        int maxRow = (int) ((bullet.getY() + radius) / GameMap.TILE_SIZE);
 
-    // for (double x : checkX) {
-    // for (double y : checkY) {
-    // int col = (int) (x / GameMap.TILE_SIZE);
-    // int row = (int) (y / GameMap.TILE_SIZE);
-
-    // if (GameMap.isSolid(row, col)) {
-    // return true;
-    // }
-    // }
-    // }
-    // return false;
-    // }
+        for (int row = minRow; row <= maxRow; row++) {
+            for (int col = minCol; col <= maxCol; col++) {
+                if (GameMap.MAP_DATA[row][col] == 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     public void addBullet(String roomId, String playerId, String bulletId, double x, double y, double angleRad) {
         // computeIfAbsent giúp khởi tạo list an toàn atomically nếu roomId chưa tồn tại
@@ -149,21 +158,16 @@ public final class GameEngine {
             return;
         }
 
-        List<ServerBullet> bullets = bulletsByRoomId.get(roomId);
-        if (bullets != null) {
-            // String bulletId = UUID.randomUUID().toString().substring(0, 8);
-            addBullet(roomId, playerId, bulletId, x, y, angleRad);
-            if (bullets.size() > 0) System.out.println(bullets);
-        } 
+        addBullet(roomId, playerId, bulletId, x, y, angleRad);
     }
 
     /** Kiểm tra va chạm giữa Đạn và Tường */
-    private boolean isBulletCollidingWithMap(ServerBullet bullet) {
-        int col = (int) (bullet.getX() / GameMap.TILE_SIZE);
-        int row = (int) (bullet.getY() / GameMap.TILE_SIZE);
+    // private boolean isBulletCollidingWithMap(ServerBullet bullet) {
+    //     int col = (int) (bullet.getX() / GameMap.TILE_SIZE);
+    //     int row = (int) (bullet.getY() / GameMap.TILE_SIZE);
 
-        return GameMap.isSolid(row, col);
-    }
+    //     return GameMap.isSolid(row, col);
+    // }
 
     private void checkGameOver(GameRoom room, ServerTank p1, ServerTank p2) {
         if (p1.isDead() || p2.isDead()) {
@@ -175,6 +179,15 @@ public final class GameEngine {
 
     public long getServerTick() {
         return serverTick;
+    }
+
+    public List<DestroyedBullet> drainDestroyedBullets() {
+        List<DestroyedBullet> destroyedBullets = new ArrayList<>();
+        DestroyedBullet destroyedBullet;
+        while ((destroyedBullet = pendingDestroyedBullets.poll()) != null) {
+            destroyedBullets.add(destroyedBullet);
+        }
+        return destroyedBullets;
     }
 
     public ServerTank getTank(String playerId) {

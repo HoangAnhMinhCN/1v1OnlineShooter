@@ -39,23 +39,18 @@ public class Bullet {
         x += speedX;
         y += speedY;
 
-        // 2. Kiểm tra va chạm rìa bản đồ (Out of Bounds)
+        // Predict static collisions locally so visuals do not wait for the server packet.
         double mapWidth = GameMap.COLS * GameMap.TILE_SIZE;
         double mapHeight = GameMap.ROWS * GameMap.TILE_SIZE;
-
-        if (x < 0 || x > mapWidth || y < 0 || y > mapHeight) {
-            this.active = false; // Hủy đạn khi bay ra ngoài Map
+        if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) {
+            active = false;
             return;
         }
 
-        // 3. Kiểm tra va chạm tường gạch (Wall Collision)
         int col = (int) (x / GameMap.TILE_SIZE);
         int row = (int) (y / GameMap.TILE_SIZE);
-
-        if (row >= 0 && row < GameMap.ROWS && col >= 0 && col < GameMap.COLS) {
-            if (GameMap.MAP_DATA[row][col] == 1) { // 1 là Tường gạch/Vật cản
-                this.active = false; // Đâm vào tường thì biến mất
-            }
+        if (GameMap.MAP_DATA[row][col] == 1) {
+            active = false;
         }
     }
 

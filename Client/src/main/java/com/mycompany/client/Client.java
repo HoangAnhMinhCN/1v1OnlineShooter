@@ -106,7 +106,7 @@ public class Client {
 
     private void eventLoop() {
         try {
-            ByteBuffer buffer = ByteBuffer.allocate(1024);
+            ByteBuffer buffer = ByteBuffer.allocate(65507);
 
             while (true) {
                 selector.select();

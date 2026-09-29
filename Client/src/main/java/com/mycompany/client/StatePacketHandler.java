@@ -81,6 +81,25 @@ public final class StatePacketHandler {
         }
     }
 
+    public static void handleDestroyedBullet(String[] parts) {
+        if (parts.length != 3) {
+            return;
+        }
+
+        Client client = Client.getInstance();
+        if (client == null || !parts[1].equals(client.getGameRoomId())) {
+            return;
+        }
+
+        String bulletId = parts[2];
+        Platform.runLater(() -> {
+            GameScene scene = GameScene.getInstance();
+            if (scene != null) {
+                scene.removeDestroyedBullets(List.of(bulletId));
+            }
+        });
+    }
+
     private static void applyState(
             Client client, boolean amPlayer1,
             double x1, double y1, double body1, double turret1, int hp1,
@@ -90,6 +109,11 @@ public final class StatePacketHandler {
         GameScene scene = GameScene.getInstance();
         if (scene == null) {
             return;
+        }
+
+        // Xóa đạn ngay khi nhận được STATE, không phụ thuộc vào việc tank đã sẵn sàng.
+        if (!destroyedBulletIds.isEmpty()) {
+            scene.removeDestroyedBullets(destroyedBulletIds);
         }
 
         Tank localTank = scene.getLocalTank();
@@ -106,9 +130,6 @@ public final class StatePacketHandler {
             applyRemoteState(enemyTank, x1, y1, body1, turret1, hp1);
         }
 
-        if (!destroyedBulletIds.isEmpty()) {
-            scene.removeDestroyedBullets(destroyedBulletIds);
-        }
     }
 
     private static void applyLocalState(Tank tank, double x, double y, double bodyAngle, double turretAngle, int hp) {

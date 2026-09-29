@@ -1,7 +1,9 @@
 package com.mycompany.client.game;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.mycompany.client.Client;
@@ -32,6 +34,8 @@ public class GameScene {
     private InputHandler inputHandler;
     private GameController gameController;
     private List<Bullet> bullets = new CopyOnWriteArrayList<>();
+    private final Set<String> destroyedBulletIds = new HashSet<>();
+    private Canvas canvas;
 
     private List<Tank> tanks;
 
@@ -42,7 +46,7 @@ public class GameScene {
         this.scene = new Scene(root);
         this.gameController = gameController;
 
-        Canvas canvas = (Canvas) root.lookup("#gameCanvas");
+        canvas = (Canvas) root.lookup("#gameCanvas");
 
         if (canvas != null) {
             this.gameRender = new GameRender(canvas.getGraphicsContext2D());
@@ -109,21 +113,23 @@ public class GameScene {
 
         // Tạo đối tượng đạn mới và thêm vào list
         String bulletId = Client.getInstance().getPlayerId() + "_" + System.currentTimeMillis();
-        Bullet newBullet = new Bullet(bulletId, startX, startY, angle, shooter.getIdPlayer());
-        bullets.add(newBullet);
+        if (!destroyedBulletIds.contains(bulletId)) {
+            Bullet newBullet = new Bullet(bulletId, startX, startY, angle, shooter.getIdPlayer());
+            bullets.add(newBullet);
+        }
         return bulletId;
     }
 
     public void spawnBullet(String bulletId, double x, double y, double angle, String playerId) {
         // Tạo viên đạn từ dữ liệu nhận được qua UDP.
-        bullets.add(new Bullet(bulletId, x, y, angle, playerId));
+        if (!destroyedBulletIds.contains(bulletId)) {
+            bullets.add(new Bullet(bulletId, x, y, angle, playerId));
+        }
     }
 
     public void removeDestroyedBullets(List<String> destroyedBulletIds) {
-        for (Bullet bullet : bullets) {
-            if (destroyedBulletIds.contains(bullet.getId())) bullets.remove(bullet);
-        }
-        System.out.println(bullets);
+        this.destroyedBulletIds.addAll(destroyedBulletIds);
+        bullets.removeIf(bullet -> bullet != null && this.destroyedBulletIds.contains(bullet.getId()));
     }
 
     // ── Vòng lặp game ─────────────────────────────────────────────────────────

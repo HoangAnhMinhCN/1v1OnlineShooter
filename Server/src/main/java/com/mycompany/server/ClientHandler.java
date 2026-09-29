@@ -2,6 +2,7 @@ package com.mycompany.server;
 
 import com.mycompany.server.game.ServerBullet;
 import com.mycompany.server.game.ServerTank;
+import com.mycompany.server.game.GameEngine;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channel;
@@ -166,7 +167,6 @@ public final class ClientHandler {
 
         // Lấy danh sách đạn KHÔNG CÒN ACTIVE trong phòng
         List<ServerBullet> bullets = Server.gameEngine.getBullets(room.getRoomId());
-        if (bullets.size() > 0) System.out.println(bullets);
         List<String> destroyedBulletIds = new ArrayList<>();
         for (ServerBullet b : bullets) {
             if (!b.isAlive())
@@ -176,7 +176,6 @@ public final class ClientHandler {
         for (String bulletId : destroyedBulletIds) {
             sb.append("|").append(bulletId);
         }
-        if (destroyedBulletIds.size() > 0) System.out.println(destroyedBulletIds);
 
         return sb.toString();
     }
@@ -190,6 +189,21 @@ public final class ClientHandler {
             }
             sendUdpState(channel, state, room.getPlayer1Id());
             sendUdpState(channel, state, room.getPlayer2Id());
+        }
+    }
+
+    static void broadcastDestroyedBullets(
+            DatagramChannel channel, List<GameEngine.DestroyedBullet> destroyedBullets) {
+        for (GameEngine.DestroyedBullet destroyedBullet : destroyedBullets) {
+            GameRoom room = Server.gameEngine.getRoom(destroyedBullet.roomId());
+            if (room == null) {
+                continue;
+            }
+
+            String packet = "BULLET_DESTROYED|" + destroyedBullet.roomId()
+                    + "|" + destroyedBullet.bulletId();
+            sendUdpState(channel, packet, room.getPlayer1Id());
+            sendUdpState(channel, packet, room.getPlayer2Id());
         }
     }
 

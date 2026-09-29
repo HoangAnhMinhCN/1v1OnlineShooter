@@ -19,7 +19,7 @@ public class Server {
     private Set<SocketChannel> tcpClients = new HashSet<>();
     public static ConcurrentHashMap<String, Player> players = new ConcurrentHashMap<>();
     public static ArrayDeque<String> matchMakingQueue = new ArrayDeque<>();
-    public static final GameEngine gameEngine = new GameEngine();
+    static final GameEngine gameEngine = new GameEngine();
     private static final long TICK_NANOS = 16_666_667L; // 60 tick/s
     private static final int STATE_SEND_INTERVAL_TICKS = 3; // 20 STATE/s
     private long nextTickNanos = System.nanoTime();
@@ -61,6 +61,8 @@ public class Server {
             long now = System.nanoTime();
             while (now >= nextTickNanos) {
                 gameEngine.tick();
+                ClientHandler.broadcastDestroyedBullets(
+                        udpServerChannel, gameEngine.drainDestroyedBullets());
                 if (gameEngine.getServerTick() % STATE_SEND_INTERVAL_TICKS == 0) {
                     ClientHandler.broadcastStates(udpServerChannel);
                 }

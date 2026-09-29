@@ -14,13 +14,14 @@ public class ServerBullet {
     public static final double BULLET_SPEED = 8.0; // Tốc độ đạn per tick
     public static final int BULLET_DAMAGE = 10; // Sát thương mỗi viên
 
-    public ServerBullet(String id, String roomId, String ownerId, double x, double y, double angleRad) {
+    public ServerBullet(String id, String roomId, String ownerId, double x, double y, double angleDeg) {
         this.id = id;
         this.roomId = roomId;
         this.ownerId = ownerId;
         this.x = x;
         this.y = y;
-        // Tính vận tốc theo góc nòng pháo
+        // Client dùng góc độ, 0 độ hướng lên trên.
+        double angleRad = Math.toRadians(angleDeg - 90.0);
         this.vx = Math.cos(angleRad) * BULLET_SPEED;
         this.vy = Math.sin(angleRad) * BULLET_SPEED;
     }

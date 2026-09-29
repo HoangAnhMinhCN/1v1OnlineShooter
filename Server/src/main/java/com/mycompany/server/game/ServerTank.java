@@ -81,25 +81,38 @@ public final class ServerTank {
     }
 
     public boolean intersectsBullet(double bx, double by, double bradius) {
-        double halfW = WIDTH / 2.0; // 18.0
-        double halfH = HEIGHT / 2.0; // 18.0
+        // 1. Tính tọa độ TÂM của xe tăng
+        double centerX = this.x + WIDTH / 2.0;
+        double centerY = this.y + HEIGHT / 2.0;
 
-        // Tìm điểm trên Bounding Box của Xe gần tâm viên đạn nhất
-        double closestX = Math.max(this.x - halfW, Math.min(bx, this.x + halfW));
-        double closestY = Math.max(this.y - halfH, Math.min(by, this.y + halfH));
+        // 2. Chuyển tâm đạn về hệ tọa độ có gốc là Tâm xe
+        double relX = bx - centerX;
+        double relY = by - centerY;
 
-        // Tính bình phương khoảng cách từ điểm đó tới tâm đạn
-        double distX = bx - closestX;
-        double distY = by - closestY;
-        double distanceSquared = (distX * distX) + (distY * distY);
+        // 3. Xoay ngược vị trí đạn theo góc bodyAngle (đổi từ deg sang rad)
+        double rad = Math.toRadians(-this.bodyAngle);
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
 
-        // Trúng đạn nếu khoảng cách nhỏ hơn hoặc bằng bán kính đạn
-        return distanceSquared <= (bradius * bradius);
+        // Tọa độ đạn sau khi xoay về hệ tọa độ riêng của Xe
+        double localBx = relX * cos - relY * sin;
+        double localBy = relX * sin + relY * cos;
+
+        // 4. Kiểm tra va chạm AABB trong hệ tọa độ riêng của Xe
+        double halfW = WIDTH / 2.0;
+        double halfH = HEIGHT / 2.0;
+
+        double closestX = Math.max(-halfW, Math.min(localBx, halfW));
+        double closestY = Math.max(-halfH, Math.min(localBy, halfH));
+
+        double distX = localBx - closestX;
+        double distY = localBy - closestY;
+
+        return (distX * distX + distY * distY) <= (bradius * bradius);
     }
 
     public void takeDamage(int damage) {
         this.hp = Math.max(0, this.hp - damage);
-        System.out.println("player id " + playerId + " shoot");
     }
 
     public boolean isDead() {

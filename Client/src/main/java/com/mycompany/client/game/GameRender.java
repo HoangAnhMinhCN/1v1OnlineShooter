@@ -109,14 +109,27 @@ public class GameRender extends AnimationTimer {
             return;
         }
 
+        // 1. Cập nhật vị trí cho tất cả viên đạn
         for (Bullet bullet : bullets) {
-            // Xóa đạn đã hết hiệu lực, còn đạn đang bay thì cập nhật vị trí.
-            if (bullet == null || !bullet.isActive()) {
-                bullets.remove(bullet);
-            } else {
+            if (bullet != null && bullet.isActive()) {
                 bullet.update();
+                if (!bullet.isActive() || tanks == null) {
+                    continue;
+                }
+
+                // Predict only the visual impact; server remains authoritative for damage.
+                for (Tank tank : tanks) {
+                    if (tank != null && !tank.getIdPlayer().equals(bullet.getIdPlayer())
+                            && tank.intersectsBullet(bullet.getX(), bullet.getY(), 4.0)) {
+                        bullet.setActive(false);
+                        break;
+                    }
+                }
             }
         }
+
+        // 2. Lọc xóa tất cả đạn inactive/null một cách an toàn
+        bullets.removeIf(bullet -> bullet == null || !bullet.isActive());
     }
 
 }

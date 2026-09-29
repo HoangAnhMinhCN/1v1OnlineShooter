@@ -158,6 +158,37 @@ public class Tank {
         return GameMap.MAP_DATA[row][col] != 1; // 1 = tường
     }
 
+    public boolean intersectsBullet(double bx, double by, double bradius) {
+        // 1. Tính tọa độ TÂM của xe tăng
+        double centerX = this.x + WIDTH / 2.0;
+        double centerY = this.y + HEIGHT / 2.0;
+
+        // 2. Chuyển tâm đạn về hệ tọa độ có gốc là Tâm xe
+        double relX = bx - centerX;
+        double relY = by - centerY;
+
+        // Match the server hitbox, which rotates with the tank body.
+        double rad = Math.toRadians(-this.angleTank);
+        double cos = Math.cos(rad);
+        double sin = Math.sin(rad);
+
+        // Tọa độ đạn sau khi xoay về hệ tọa độ riêng của Xe
+        double localBx = relX * cos - relY * sin;
+        double localBy = relX * sin + relY * cos;
+
+        // Match the server's 36x36 collision rectangle.
+        double halfW = WIDTH / 2.0;
+        double halfH = HEIGHT / 2.0;
+
+        double closestX = Math.max(-halfW, Math.min(localBx, halfW));
+        double closestY = Math.max(-halfH, Math.min(localBy, halfH));
+
+        double distX = localBx - closestX;
+        double distY = localBy - closestY;
+
+        return (distX * distX + distY * distY) <= (bradius * bradius);
+    }
+
     // ── Getters ───────────────────────────────────────────────────────────────
 
     public double getX() {
