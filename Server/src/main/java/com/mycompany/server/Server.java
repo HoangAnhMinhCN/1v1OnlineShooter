@@ -10,7 +10,7 @@ import java.util.*;
 import com.mycompany.server.game.GameEngine;
 
 public class Server {
-    private static final String SERVER_HOST = "26.142.23.65";
+    private static final String SERVER_HOST = "localhost";
     private static final int PORT = 12345;
     private Selector selector;
     private ServerSocketChannel tcpServerChannel;
