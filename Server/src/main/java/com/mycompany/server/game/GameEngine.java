@@ -173,7 +173,7 @@ public final class GameEngine {
         if (p1.isDead() || p2.isDead()) {
             String winnerId = p1.isDead() ? p2.getPlayerId() : p1.getPlayerId();
             System.out.println("[GameEngine] Trận đấu " + room.getRoomId() + " kết thúc! Người thắng: " + winnerId);
-            // TODO: Gửi sự kiện GAME_OVER qua TCP cho 2 client
+            // Gửi sự kiện GAME_OVER qua TCP cho 2 client
         }
     }
 

@@ -54,7 +54,7 @@ public final class GamePacketSender {
                 keys,
                 turretAngle);
 
-        client.sendUdpData(packet);
+        Client.sendUdpData(packet);
     }
 
     public static void sendShoot(Client client, Tank tank, String bulletId) {
@@ -71,6 +71,6 @@ public final class GamePacketSender {
                 tank.getCenterY(),
                 tank.getTurretAngle());
 
-        client.sendUdpData(packet);
+        Client.sendUdpData(packet);
     }
 }
