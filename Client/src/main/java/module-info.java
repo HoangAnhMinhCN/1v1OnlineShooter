@@ -9,4 +9,6 @@ module com.mycompany.client {
     opens com.mycompany.client.game to javafx.fxml;
     
     exports com.mycompany.client;
+    exports com.mycompany.client.game;
+    exports com.mycompany.client.controller;
 }
