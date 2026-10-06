@@ -183,6 +183,9 @@ public final class ClientHandler {
     /** Sends authoritative snapshots to both players of every active room. */
     public static void broadcastStates(DatagramChannel channel) {
         for (GameRoom room : Server.gameEngine.getRooms()) {
+            if (Server.gameEngine.isRoomFinished(room.getRoomId())) {
+                continue;
+            }
             String state = buildState(room);
             if (state == null) {
                 continue;
@@ -205,6 +208,21 @@ public final class ClientHandler {
             sendUdpState(channel, packet, room.getPlayer1Id());
             sendUdpState(channel, packet, room.getPlayer2Id());
         }
+    }
+
+    public static void broadcastGameOver(GameRoom room, String winnerId) {
+        String packet = "GAME_OVER|" + room.getRoomId() + "|" + winnerId;
+        sendGameOverToPlayer(room.getPlayer1Id(), packet);
+        sendGameOverToPlayer(room.getPlayer2Id(), packet);
+    }
+
+    private static void sendGameOverToPlayer(String playerId, String packet) {
+        Player player = Server.players.get(playerId);
+        if (player == null || player.getTcpChannel() == null) {
+            System.err.println("[Server] Could not send GAME_OVER to " + playerId + ": player is not connected");
+            return;
+        }
+        sendTcpResponse(packet, player.getTcpChannel());
     }
 
     private static void sendUdpState(DatagramChannel channel, String state, String playerId) {
@@ -297,7 +315,7 @@ public final class ClientHandler {
         }
     }
 
-    private static void sendTcpResponse(String response, Channel clientChannel) {
+    public static void sendTcpResponse(String response, Channel clientChannel) {
         if (!(clientChannel instanceof SocketChannel)) {
             return;
         }

@@ -3,6 +3,7 @@ package com.mycompany.client;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -157,6 +158,8 @@ public class Client {
                     }
                 }
             }
+        } catch (ClosedSelectorException e) {
+            System.out.println("[Client] đã đóng kết nối, dừng event loop.");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -196,7 +199,7 @@ public class Client {
         }
     }
 
-    private void closeQuietly() {
+    public void closeQuietly() {
         try {
             if (tcpChannel != null)
                 tcpChannel.close();

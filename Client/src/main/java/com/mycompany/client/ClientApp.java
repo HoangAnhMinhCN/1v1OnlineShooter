@@ -15,6 +15,10 @@ public class ClientApp extends Application {
 
     @Override
     public void start(Stage stage) {
+        stage.setOnCloseRequest(event -> {
+            cleanupAndExit();
+        });
+
         client = new Client();
         client.setConnectionCallback(new ConnectionCallback() {
             @Override
@@ -31,6 +35,20 @@ public class ClientApp extends Application {
         });
 
         client.connect(); // lưu ý xử lý trường hợp mất kết nối mạng (hiện tại chưa xử lý)
+    }
+
+    private void cleanupAndExit() {
+        if (client != null) {
+            client.closeQuietly(); 
+        }
+        Platform.exit();
+        System.exit(0); // Bắt buộc kết thúc tiến trình để IDE dừng hẳn tab Run
+    }
+
+    @Override
+    public void stop() throws Exception {
+        cleanupAndExit();
+        super.stop();
     }
 
     public void showErrorAlert(String message) {

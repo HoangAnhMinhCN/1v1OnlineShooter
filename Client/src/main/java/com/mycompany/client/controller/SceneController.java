@@ -100,6 +100,25 @@ public class SceneController {
         return currentGameScene;
     }
 
+    public void showGameOver(String winnerId) {
+        Platform.runLater(() -> {
+            if (currentGameScene != null) {
+                currentGameScene.stopLoop();
+            }
+
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Kết thúc trận đấu");
+            alert.setHeaderText("Game Over");
+            if (winnerId.equals(client.getPlayerId())) {
+                alert.setContentText("Bạn đã chiến thắng!");
+            } else {
+                alert.setContentText("Bạn đã thua!");
+            }
+            alert.showAndWait();
+            showLobbyUI();
+        });
+    }
+
     public void showErrorAlert(String message) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.ERROR);

@@ -112,9 +112,7 @@ public class Server {
                                 buffer.get(data);
                                 String msg = new String(data).trim();
                                 System.out.println("[TCP Received]: " + msg);
-                                ClientHandler.handleClientPacket(msg, clientChannel); // Gọi hàm xử lý tin nhắn từ
-                                                                                      // client
-                                // Xử lý tin nhắn nhận được
+                                ClientHandler.handleClientPacket(msg, clientChannel);
                             }
                         } catch (Exception e) {
                             System.out.println(

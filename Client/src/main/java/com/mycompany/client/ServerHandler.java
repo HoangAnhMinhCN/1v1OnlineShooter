@@ -54,6 +54,10 @@ public class ServerHandler {
                     Platform.runLater(() -> SceneController.getInstance().showGameUI(parts[4]));
                     break;
 
+                case "GAME_OVER":
+                    handleGameOver(parts);
+                    break;
+
                 default:
                     System.out.println("[ServerHandler] Unknown packet: " + message);
                     break;
@@ -62,5 +66,13 @@ public class ServerHandler {
             e.printStackTrace();
         }
 
+    }
+
+    private static void handleGameOver(String[] parts) {
+        Client client = Client.getInstance();
+        if (parts.length != 3 || client == null || !parts[1].equals(client.getGameRoomId())) {
+            return;
+        }
+        SceneController.getInstance().showGameOver(parts[2]);
     }
 }

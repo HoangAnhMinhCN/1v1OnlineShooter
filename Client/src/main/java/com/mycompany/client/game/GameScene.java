@@ -175,4 +175,9 @@ public class GameScene {
                 .findFirst()
                 .orElse(null);
     }
+
+    public void updateHpBars(int hpPlayer1, int hpPlayer2) {
+        gameController.updateHpPlayer1(hpPlayer1);
+        gameController.updateHpPlayer2(hpPlayer2);
+    }
 }

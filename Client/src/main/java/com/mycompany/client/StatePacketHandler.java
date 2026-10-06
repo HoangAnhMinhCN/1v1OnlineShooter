@@ -199,6 +199,7 @@ public final class StatePacketHandler {
             myX = x2; myY = y2; myBody = body2; myTurret = turret2; myHp = hp2;
             enemyX = x1; enemyY = y1; enemyBody = body1; enemyTurret = turret1; enemyHp = hp1;
         }
+        scene.updateHpBars(hp1, hp2);
 
         // ── Bước 1: Đặt tank về vị trí authoritative từ server ──────────────
         // Đây là "điểm bắt đầu" để replay. Server luôn đúng.
