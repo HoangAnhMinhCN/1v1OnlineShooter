@@ -5,11 +5,13 @@ import com.mycompany.client.GamePacketSender;
 import com.mycompany.client.game.GameScene;
 import com.mycompany.client.game.Tank;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.VBox;
@@ -29,6 +31,10 @@ public class GameController {
     private Label namePlayer1;
     @FXML
     private Label namePlayer2;
+    @FXML
+    private ProgressBar hpPlayer1;
+    @FXML
+    private ProgressBar hpPlayer2;
 
     private Client client;
 
@@ -60,11 +66,17 @@ public class GameController {
         if (Client.getInstance().getMyNumber() == 1) {
             namePlayer1.setText(nameP1);
             namePlayer1.setStyle("-fx-font-weight: bold;");
+            hpPlayer1.setStyle("-fx-accent: green;");
+
             namePlayer2.setText(nameP2);
+            hpPlayer2.setStyle("-fx-accent: red;");
         } else {
             namePlayer2.setText(nameP1);
             namePlayer2.setStyle("-fx-font-weight: bold;");
+            hpPlayer2.setStyle("-fx-accent: green;");
+
             namePlayer1.setText(nameP2);
+            hpPlayer1.setStyle("-fx-accent: red;");
         }
     }
 
@@ -83,5 +95,19 @@ public class GameController {
                 GamePacketSender.sendShoot(client, tank, bulletId);
             }
         }
+    }
+
+    public void updateHpPlayer1(int currentHp) {
+        Platform.runLater(() -> {
+            double progress = (double) Math.max(0, currentHp) / 100.0;
+            hpPlayer1.setProgress(progress);
+        });
+    }
+
+    public void updateHpPlayer2(int currentHp) {
+        Platform.runLater(() -> {
+            double progress = (double) Math.max(0, currentHp) / 100.0;
+            hpPlayer2.setProgress(progress);
+        });
     }
 }

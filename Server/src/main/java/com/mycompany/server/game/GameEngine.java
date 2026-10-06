@@ -1,11 +1,13 @@
 package com.mycompany.server.game;
 
+import com.mycompany.server.ClientHandler;
 import com.mycompany.server.GameRoom;
 
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -17,6 +19,7 @@ public final class GameEngine {
     private final Map<String, GameRoom> roomsById = new ConcurrentHashMap<>();
     private Map<String, List<ServerBullet>> bulletsByRoomId = new ConcurrentHashMap<>();
     private final ConcurrentLinkedQueue<DestroyedBullet> pendingDestroyedBullets = new ConcurrentLinkedQueue<>();
+    private final Set<String> finishedRoomIds = ConcurrentHashMap.newKeySet();
     private long serverTick;
 
     public void createMatch(GameRoom room) {
@@ -40,7 +43,7 @@ public final class GameEngine {
         GameRoom room = roomsById.get(roomId);
         ServerTank tank = tanksByPlayerId.get(playerId);
 
-        if (room == null || tank == null)
+        if (room == null || tank == null || finishedRoomIds.contains(roomId))
             return false;
         // kiểm tra người chơi có thuộc phòng không
         boolean belongsToRoom = playerId.equals(room.getPlayer1Id())
@@ -66,7 +69,7 @@ public final class GameEngine {
             String roomId = entry.getKey();
             List<ServerBullet> bullets = entry.getValue();
             GameRoom room = roomsById.get(roomId);
-            if (room == null)
+            if (room == null || finishedRoomIds.contains(roomId))
                 continue;
 
             ServerTank p1 = tanksByPlayerId.get(room.getPlayer1Id());
@@ -93,7 +96,8 @@ public final class GameEngine {
                         p1.takeDamage(ServerBullet.BULLET_DAMAGE);
                         bullet.destroy();
                         pendingDestroyedBullets.add(new DestroyedBullet(roomId, bullet.getId()));
-                        checkGameOver(room, p1, p2);
+                        if (checkGameOver(room, p1, p2))
+                            break;
                         continue;
                     }
                 }
@@ -104,7 +108,8 @@ public final class GameEngine {
                         p2.takeDamage(ServerBullet.BULLET_DAMAGE);
                         bullet.destroy();
                         pendingDestroyedBullets.add(new DestroyedBullet(roomId, bullet.getId()));
-                        checkGameOver(room, p1, p2);
+                        if (checkGameOver(room, p1, p2))
+                            break;
                         continue;
                     }
                 }
@@ -154,7 +159,7 @@ public final class GameEngine {
         GameRoom room = roomsById.get(roomId);
         ServerTank tank = tanksByPlayerId.get(playerId);
 
-        if (room == null || tank == null || tank.isDead()) {
+        if (room == null || tank == null || tank.isDead() || finishedRoomIds.contains(roomId)) {
             return;
         }
 
@@ -169,12 +174,18 @@ public final class GameEngine {
     //     return GameMap.isSolid(row, col);
     // }
 
-    private void checkGameOver(GameRoom room, ServerTank p1, ServerTank p2) {
-        if (p1.isDead() || p2.isDead()) {
-            String winnerId = p1.isDead() ? p2.getPlayerId() : p1.getPlayerId();
-            System.out.println("[GameEngine] Trận đấu " + room.getRoomId() + " kết thúc! Người thắng: " + winnerId);
-            // Gửi sự kiện GAME_OVER qua TCP cho 2 client
+    private boolean checkGameOver(GameRoom room, ServerTank p1, ServerTank p2) {
+        if (!p1.isDead() && !p2.isDead()) {
+            return false;
         }
+        if (!finishedRoomIds.add(room.getRoomId())) {
+            return true;
+        }
+
+        String winnerId = p1.isDead() ? p2.getPlayerId() : p1.getPlayerId();
+        System.out.println("[GameEngine] Trận đấu " + room.getRoomId() + " kết thúc! Người thắng: " + winnerId);
+        ClientHandler.broadcastGameOver(room, winnerId);
+        return true;
     }
 
     public long getServerTick() {
@@ -201,6 +212,10 @@ public final class GameEngine {
     /** Returns the active rooms managed by this engine. */
     public Collection<GameRoom> getRooms() {
         return roomsById.values();
+    }
+
+    public boolean isRoomFinished(String roomId) {
+        return finishedRoomIds.contains(roomId);
     }
 
     public List<ServerBullet> getBullets(String roomId) {
